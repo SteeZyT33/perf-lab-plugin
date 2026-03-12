@@ -1,0 +1,16 @@
+{
+  "metric_name": "cycles",
+  "direction": "lower",
+  "test_command": "python tests/submission_tests.py",
+  "parse_metric": "grep -oP '\\d+(?= cycles)'",
+  "solution_file": "perf_takehome.py",
+  "target": 1487,
+  "targets": {
+    "18532": "Updated starter",
+    "2164": "Opus 4 extended",
+    "1487": "Recruiting target"
+  },
+  "agents": ["alpha", "beta", "gamma"],
+  "max_iterations": 50,
+  "notebook_name": "Original Anthropic Take Home Research Papers"
+}

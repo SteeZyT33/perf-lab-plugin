@@ -1,0 +1,7 @@
+{
+  "name": "perf-lab",
+  "version": "0.1.0",
+  "description": "Autonomous multi-agent performance optimization plugin",
+  "skills": "skills",
+  "agents": "agents"
+}
