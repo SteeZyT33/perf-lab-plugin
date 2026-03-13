@@ -49,6 +49,7 @@ Questions to ask (skip any you already know):
 3. **"What's the target?"** — and any milestone targets along the way
 4. **"How many parallel agents do you want?"** — default: 3 (alpha, beta, gamma)
 5. **"Do you have a NotebookLM notebook for research?"** — optional, can skip
+6. **"Do you have a Semantic Scholar API key?"** — optional. The free tier works but has low rate limits. Users can get a key at https://www.semanticscholar.org/product/api#api-key-form for higher limits. Leave blank if none.
 
 Don't ask about things you can confidently infer (test command, solution file, parse command).
 
