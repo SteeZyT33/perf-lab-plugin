@@ -20,5 +20,6 @@
   "plateau_threshold": 10,
   "max_breakthrough_cycles": 3,
   "max_total_iterations": 200,
+  "rewrite_time_budget_minutes": 60,
   "breakthrough_research_budget": 5
 }
