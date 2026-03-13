@@ -14,6 +14,7 @@
 7. Check for new bests: `./scripts/check-new-best.sh <agent>`
 
 ### Commands
+- `/perf-lab:init` — initialize perf-lab in a new project (guided setup)
 - `/perf-lab:experiment` — run one iteration
 - `/perf-lab:status` — show dashboard
 - `/perf-lab:research` — query NotebookLM for ideas

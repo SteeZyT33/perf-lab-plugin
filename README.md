@@ -46,6 +46,7 @@ Edit `perf-lab.config.json` in your project root:
 
 | Command | What it does |
 |---|---|
+| `/perf-lab:init` | Guided project setup — inspects codebase, generates config, installs |
 | `/perf-lab:experiment` | Run one optimization iteration |
 | `/perf-lab:status` | Show experiment dashboard |
 | `/perf-lab:research` | Query NotebookLM for ideas |
