@@ -41,12 +41,30 @@ If `notebook_name` is configured in `perf-lab.config.json`:
 - Use `mcp__notebooklm-mcp__notebook_query` with the configured notebook
 - Best for questions specific to the project's domain where you've already collected sources
 
-## 5. Save findings
+## 5. Pick the right source
 
-Write results to `shared/Research/<topic>.md` with:
-- **Sources used** (which of the three, with links/citations)
+Don't blindly query all three. Match the source to the question:
+- **Semantic Scholar** — algorithmic techniques, data structures, theoretical bounds, prior art. Not for "how do I use tool X" or current events.
+- **Web search** — practical guides, architecture manuals, recent blog posts, Stack Overflow. Not for formal proofs or theoretical limits.
+- **NotebookLM** — project-specific context from sources you've already curated. Not for general knowledge.
+
+## 6. Save findings
+
+File name encodes the source so other agents and future sessions know what's been researched and where it came from — no re-querying.
+
+**Naming convention**: `shared/Research/<source>-<topic-slug>.md`
+
+Examples:
+- `shared/Research/semantic-scholar-list-scheduling.md`
+- `shared/Research/web-search-ti-c7000-guide.md`
+- `shared/Research/notebooklm-hash-pipeline-interleaving.md`
+
+Each file contains:
+- **Source**: which source and the query/URL used
 - **Key findings** — specific techniques, not general advice
 - **Actionable ideas** — concrete next experiments to try, ranked by estimated impact
-- **Relevant papers** — title, year, citation count, and why it's relevant
+- **Relevant papers** (if Semantic Scholar) — title, year, citation count, and why it's relevant
+
+Before researching, check `shared/Research/` for existing files on the same topic — don't duplicate work.
 
 Update `shared/learned-constraints.md` if research reveals new theoretical limits or disproves existing assumptions.
