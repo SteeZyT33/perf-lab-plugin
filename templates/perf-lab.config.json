@@ -13,6 +13,7 @@
   "agents": ["alpha", "beta", "gamma"],
   "max_iterations": 50,
   "notebook_name": "Original Anthropic Take Home Research Papers",
+  "semantic_scholar_api_key": "",
   "source_files": ["src/engine.py"],
   "system_files": ["src/simulator.py", "src/problem.py"],
   "constraints_file": "shared/learned-constraints.md",
