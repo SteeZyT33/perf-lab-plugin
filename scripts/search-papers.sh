@@ -19,9 +19,10 @@ PROJECT_DIR="${PERF_LAB_PROJECT:-$(dirname "$SCRIPT_DIR")}"
 CONFIG="$PROJECT_DIR/perf-lab.config.json"
 
 # Use API key if configured (higher rate limits)
+# Check research.semantic_scholar_api_key first, fall back to top-level
 CURL_HEADERS=()
 if [[ -f "$CONFIG" ]]; then
-    API_KEY=$(jq -r '.semantic_scholar_api_key // ""' "$CONFIG")
+    API_KEY=$(jq -r '.research.semantic_scholar_api_key // .semantic_scholar_api_key // ""' "$CONFIG")
     [[ -n "$API_KEY" ]] && CURL_HEADERS=(-H "x-api-key: $API_KEY")
 fi
 

@@ -24,6 +24,18 @@ description: Run one optimization iteration — implement a single change, test 
 
 Never modify test files. Never make multiple changes at once.
 
+## Parallel work (pipeline, don't block)
+
+After logging a result, spawn a background sub-agent for ONE of these (rotate through them each iteration):
+- Research the next hypothesis via `/perf-lab:research`
+- Analyze the experiment trace for new bottleneck patterns
+- Read `shared/Research/findings/` for unread summaries from other agents or research runs
+- Query NotebookLM for techniques related to the current bottleneck
+
+Don't wait for the sub-agent to finish. Start your next experiment. Read the sub-agent's findings when they appear in `shared/Research/findings/`.
+
+**IMPORTANT**: Never read files in `shared/Research/papers/` directly — those are full-text paper conversions that will overwhelm your context. Only read the short summaries in `shared/Research/findings/`. If you need details from a specific paper, query NotebookLM or spawn a sub-agent to extract the relevant section.
+
 ## Housekeeping (between experiments, not instead of them)
 
 **Every 5th iteration** — update `shared/agent-state/<agent>.md`:

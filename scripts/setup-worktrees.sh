@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="${PERF_LAB_PROJECT:-$(dirname "$SCRIPT_DIR")}"
 CONFIG="$PROJECT_DIR/perf-lab.config.json"
 SHARED_DIR="$PROJECT_DIR/shared"
+WORKTREES_DIR="$PROJECT_DIR/worktrees"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
@@ -17,9 +18,17 @@ echo ""
 
 cd "$PROJECT_DIR"
 
+# Ensure worktrees dir exists and is gitignored
+mkdir -p "$WORKTREES_DIR"
+if [[ -f .gitignore ]]; then
+    grep -qx 'worktrees/' .gitignore 2>/dev/null || echo 'worktrees/' >> .gitignore
+else
+    echo 'worktrees/' > .gitignore
+fi
+
 for AGENT in "${AGENTS[@]}"; do
     BRANCH="perf-lab/${AGENT}"
-    WORKTREE_DIR="$HOME/${AGENT}"
+    WORKTREE_DIR="$WORKTREES_DIR/${AGENT}"
 
     echo -e "${BOLD}--- Agent: ${AGENT} ---${NC}"
 
@@ -49,12 +58,13 @@ for AGENT in "${AGENTS[@]}"; do
     fi
 
     [[ -f "$PROJECT_DIR/CLAUDE.md" ]] && cp "$PROJECT_DIR/CLAUDE.md" "$WORKTREE_DIR/CLAUDE.md" && echo -e "  ${GREEN}Copied CLAUDE.md${NC}"
+    [[ -f "$CONFIG" ]] && cp "$CONFIG" "$WORKTREE_DIR/perf-lab.config.json" && echo -e "  ${GREEN}Copied perf-lab.config.json${NC}"
     echo ""
 done
 
 echo -e "${BOLD}${GREEN}Worktree setup complete.${NC}"
 echo ""
-for AGENT in "${AGENTS[@]}"; do echo "  ~/${AGENT}  (branch: perf-lab/${AGENT})"; done
+for AGENT in "${AGENTS[@]}"; do echo "  worktrees/${AGENT}/  (branch: perf-lab/${AGENT})"; done
 echo ""
 echo "All worktrees share: $SHARED_DIR"
 echo ""

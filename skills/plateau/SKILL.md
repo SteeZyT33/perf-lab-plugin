@@ -58,6 +58,16 @@ Implement the architect's design. This is the one exception to "small change, fa
 ### If rewrite succeeded
 1. Update `shared/learned-constraints.md` — especially "Current Architecture"
 2. Archive old design to `shared/Research/architect-design-[timestamp].md`
+3. Append to `shared/architecture-changelog.md`:
+   ```markdown
+   ### vN: Short description (experiment #X)
+   - Date: YYYY-MM-DD
+   - Cycles: before → after
+   - Change: What was done
+   - Binding constraint shifted: from → to
+   - Replay candidates generated: pending
+   ```
+4. Run `/perf-lab:replay` to find DISCARDED experiments worth retrying under the new architecture
 
 ## Step 6: Report
 
@@ -65,3 +75,4 @@ Implement the architect's design. This is the one exception to "small change, fa
 - Rewrite result (improved / partial / failed)
 - If improved: "New architecture active. Resuming optimization."
 - If failed: "Rewrite did not improve. Diagnostic data saved for next breakthrough cycle."
+- If replay candidates found: list them with why they might work now

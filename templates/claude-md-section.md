@@ -19,3 +19,5 @@
 - `/perf-lab:sweep` — autonomous optimization loop (with auto-resume)
 - `/perf-lab:plateau` — detect plateau, run full breakthrough → rewrite pipeline
 - `/perf-lab:swarm [N]` — launch N parallel agents with differentiated strategies
+- `/perf-lab:analyze` — trace analysis, identify resource bottlenecks
+- `/perf-lab:replay` — after architecture change, retry previously discarded experiments

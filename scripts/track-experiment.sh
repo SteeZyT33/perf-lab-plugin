@@ -18,7 +18,7 @@ SHARED_DIR="$PROJECT_DIR/shared"
 TSV="$SHARED_DIR/experiments.tsv"
 BEST_FILE="$SHARED_DIR/best-metric.txt"
 BEST_SOLUTION="$SHARED_DIR/best-solution.${SOLUTION_FILE##*.}"
-ALERT_FILE="$SHARED_DIR/new-best-alert.txt"  # legacy, kept for backward compat
+CONSTRAINTS="$SHARED_DIR/learned-constraints.md"
 
 is_better() { # $1=new $2=old
   if [[ "$DIRECTION" == "lower" ]]; then
@@ -41,16 +41,14 @@ if [[ "$STATUS" != "KEPT" && "$STATUS" != "DISCARDED" && "$STATUS" != "FAILED" &
 fi
 
 if [[ ! -f "$TSV" ]]; then
-    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC_NAME}_before\t${METRIC_NAME}_after\tstatus\tnotes" > "$TSV"
+    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC_NAME}_before\t${METRIC_NAME}_after\tstatus\tnotes\tduration_seconds" > "$TSV"
 fi
-
-LAST_ITER=$(tail -n 1 "$TSV" | cut -f3)
-if [[ "$LAST_ITER" == "iteration" || -z "$LAST_ITER" ]]; then ITER=1; else ITER=$((LAST_ITER + 1)); fi
 
 METRIC_BEFORE="-"
 if [[ -f "$BEST_FILE" ]]; then METRIC_BEFORE=$(cat "$BEST_FILE" | tr -d '[:space:]'); fi
 
 TIMESTAMP=$(date -Iseconds)
+START_EPOCH=$(date +%s)
 
 if [[ "$STATUS" == "FAILED" ]]; then
     METRIC_AFTER="-"
@@ -68,15 +66,44 @@ else
     fi
 fi
 
-echo -e "${TIMESTAMP}\t${AGENT}\t${ITER}\t${HYPOTHESIS}\t${METRIC_BEFORE}\t${METRIC_AFTER}\t${STATUS}\t${NOTES}" >> "$TSV"
-echo "Logged experiment #${ITER} by ${AGENT}: ${STATUS} — ${HYPOTHESIS}"
+END_EPOCH=$(date +%s)
+DURATION=$((END_EPOCH - START_EPOCH))
 
-if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" && "$METRIC_BEFORE" != "-" ]]; then
-    if is_better "$METRIC_AFTER" "$METRIC_BEFORE"; then
+# Compute wall-clock duration from previous experiment by this agent (if available)
+PREV_TS=$(awk -F'\t' -v a="$AGENT" '$2==a {ts=$1} END{print ts}' "$TSV")
+if [[ -n "$PREV_TS" && "$PREV_TS" != "timestamp" ]]; then
+    PREV_EPOCH=$(date -d "$PREV_TS" +%s 2>/dev/null || echo "")
+    if [[ -n "$PREV_EPOCH" ]]; then
+        WALL_DURATION=$(( $(date -d "$TIMESTAMP" +%s) - PREV_EPOCH ))
+        # Use wall-clock if test duration is trivially small
+        if (( DURATION < 5 && WALL_DURATION > 5 )); then
+            DURATION=$WALL_DURATION
+        fi
+    fi
+fi
+
+# Atomic TSV append with file locking for multi-agent safety
+(
+    flock -x 200
+    LAST_ITER=$(tail -n 1 "$TSV" | cut -f3)
+    if [[ "$LAST_ITER" == "iteration" || -z "$LAST_ITER" ]]; then ITER=1; else ITER=$((LAST_ITER + 1)); fi
+    echo -e "${TIMESTAMP}\t${AGENT}\t${ITER}\t${HYPOTHESIS}\t${METRIC_BEFORE}\t${METRIC_AFTER}\t${STATUS}\t${NOTES}\t${DURATION}" >> "$TSV"
+) 200>"$TSV.lock"
+
+# Read back the iteration number we just wrote
+ITER=$(tail -n 1 "$TSV" | cut -f3)
+echo "Logged experiment #${ITER} by ${AGENT}: ${STATUS} — ${HYPOTHESIS} (${DURATION}s)"
+
+# Bootstrap: first KEPT experiment establishes the baseline best
+if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" ]]; then
+    if [[ "$METRIC_BEFORE" == "-" ]]; then
         echo "$METRIC_AFTER" > "$BEST_FILE"
         cp "$PROJECT_DIR/$SOLUTION_FILE" "$BEST_SOLUTION"
-        # Legacy alert file (for backward compat)
-        echo "AGENT ${AGENT} achieved ${METRIC_AFTER} ${METRIC_NAME} at ${TIMESTAMP}. Strategy: ${HYPOTHESIS}" > "$ALERT_FILE"
+        echo ""
+        echo "*** FIRST BEST ESTABLISHED: ${METRIC_AFTER} ${METRIC_NAME} ***"
+    elif is_better "$METRIC_AFTER" "$METRIC_BEFORE"; then
+        echo "$METRIC_AFTER" > "$BEST_FILE"
+        cp "$PROJECT_DIR/$SOLUTION_FILE" "$BEST_SOLUTION"
         # Send message to all agents
         if [[ -x "$SCRIPT_DIR/messages.sh" ]]; then
             "$SCRIPT_DIR/messages.sh" send "$AGENT" all new-best \
@@ -84,5 +111,20 @@ if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" && "$METRIC_BEFORE" != "-" ]
         fi
         echo ""
         echo "*** NEW BEST: ${METRIC_AFTER} ${METRIC_NAME} (was ${METRIC_BEFORE}) ***"
+    fi
+fi
+
+# Auto-extract constraints from DISCARDED experiments
+if [[ "$STATUS" == "DISCARDED" && -n "$NOTES" && -f "$CONSTRAINTS" ]]; then
+    # Check for constraint-like language in notes
+    if echo "$NOTES" | grep -qiP 'impossible|overflow|blocked by|can.t because|limited by|no room|saturated|maxed|won.t fit|dependency|too (many|large|slow)'; then
+        CONSTRAINT_LINE="- ${HYPOTHESIS}: ${NOTES} (experiment #${ITER}, $(date +%Y-%m-%d))"
+        # Append under Auto-Extracted section, creating it if needed
+        if grep -q "^## Auto-Extracted" "$CONSTRAINTS"; then
+            echo "$CONSTRAINT_LINE" >> "$CONSTRAINTS"
+        else
+            printf '\n## Auto-Extracted\n\n%s\n' "$CONSTRAINT_LINE" >> "$CONSTRAINTS"
+        fi
+        echo "Auto-extracted constraint to learned-constraints.md"
     fi
 fi

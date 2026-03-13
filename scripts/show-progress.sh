@@ -12,7 +12,6 @@ DIRECTION=$(jq -r '.direction // "lower"' "$CONFIG")
 SHARED_DIR="$PROJECT_DIR/shared"
 TSV="$SHARED_DIR/experiments.tsv"
 BEST_FILE="$SHARED_DIR/best-metric.txt"
-ALERT_FILE="$SHARED_DIR/new-best-alert.txt"
 
 is_better() {
   if [[ "$DIRECTION" == "lower" ]]; then
@@ -38,10 +37,54 @@ echo "╠═══════════════════════�
 printf "║  Current best:  %-8s %-6s  (agent: %-20.20s) ║\n" "$BEST" "$METRIC_NAME" "${BEST_AGENT:-unknown}"
 echo "║                                                                  ║"
 
+# Session stats
+TOTAL_EXPERIMENTS=$(( $(wc -l < "$TSV") - 1 ))
+TOTAL_KEPT=$(awk -F'\t' '$7=="KEPT"' "$TSV" | wc -l)
+
+# Duration stats (column 9, if present)
+HAS_DURATION=false
+if head -1 "$TSV" | grep -q "duration_seconds"; then
+    HAS_DURATION=true
+fi
+
+AVG_DURATION="-"
+TOTAL_DURATION=0
+if $HAS_DURATION; then
+    TOTAL_DURATION=$(awk -F'\t' 'NR>1 && $9 ~ /^[0-9]+$/ {s+=$9} END{print s+0}' "$TSV")
+    if (( TOTAL_EXPERIMENTS > 0 )); then
+        AVG_DURATION=$(( TOTAL_DURATION / TOTAL_EXPERIMENTS ))
+    fi
+fi
+
+printf "║  Session: %3d experiments, %3d kept" "$TOTAL_EXPERIMENTS" "$TOTAL_KEPT"
+if $HAS_DURATION && [[ "$AVG_DURATION" != "-" ]]; then
+    printf ", avg %ss/exp" "$AVG_DURATION"
+fi
+printf "            ║\n"
+
+# Cost efficiency: metric improvement per hour
+if $HAS_DURATION && (( TOTAL_DURATION > 0 )); then
+    FIRST_METRIC=$(awk -F'\t' 'NR==2 && $5 ~ /^[0-9]/ {print $5}' "$TSV")
+    if [[ -n "$FIRST_METRIC" && "$BEST" != "-" ]]; then
+        HOURS=$(awk "BEGIN{printf \"%.1f\", $TOTAL_DURATION/3600}")
+        if [[ "$DIRECTION" == "lower" ]]; then
+            SAVED=$(awk "BEGIN{printf \"%.0f\", $FIRST_METRIC - $BEST}")
+        else
+            SAVED=$(awk "BEGIN{printf \"%.0f\", $BEST - $FIRST_METRIC}")
+        fi
+        if (( TOTAL_DURATION > 60 )); then
+            RATE=$(awk "BEGIN{printf \"%.1f\", $SAVED / ($TOTAL_DURATION/3600)}")
+            printf "║  Efficiency: %s %s saved in %sh (%s %s/hr)          ║\n" \
+                "$SAVED" "$METRIC_NAME" "$HOURS" "$RATE" "$METRIC_NAME"
+        fi
+    fi
+fi
+
+echo "║                                                                  ║"
 echo "║  Agent stats:                                                    ║"
 AGENTS=$(tail -n +2 "$TSV" | cut -f2 | sort -u)
 for AGENT in $AGENTS; do
-    TOTAL=$(grep -c "	${AGENT}	" "$TSV" || true)
+    TOTAL=$(awk -F'\t' -v a="$AGENT" '$2==a' "$TSV" | wc -l)
     KEPT=$(awk -F'\t' -v a="$AGENT" '$2==a && $7=="KEPT"' "$TSV" | wc -l)
     DISC=$(awk -F'\t' -v a="$AGENT" '$2==a && $7=="DISCARDED"' "$TSV" | wc -l)
     FAIL=$(awk -F'\t' -v a="$AGENT" '$2==a && $7=="FAILED"' "$TSV" | wc -l)
@@ -66,7 +109,7 @@ echo "╠═══════════════════════�
 printf "║  %-8s %-4s %-8s %-8s %-8s %-26.26s ║\n" "AGENT" "ITER" "STATUS" "BEFORE" "AFTER" "HYPOTHESIS"
 echo "║  -------- ---- -------- -------- -------- -------------------------- ║"
 
-tail -n +2 "$TSV" | tail -15 | while IFS=$'\t' read -r ts agent iter hyp before after status notes; do
+tail -n +2 "$TSV" | tail -15 | while IFS=$'\t' read -r ts agent iter hyp before after status notes rest; do
     printf "║  %-8s %-4s %-8s %-8s %-8s %-26.26s ║\n" "$agent" "$iter" "$status" "$before" "$after" "$hyp"
 done
 
@@ -77,19 +120,13 @@ DISCARDED_LINES=$(grep "DISCARDED" "$TSV" || true)
 if [[ -z "$DISCARDED_LINES" ]]; then
     echo "║  (none)                                                          ║"
 else
-    echo "$DISCARDED_LINES" | while IFS=$'\t' read -r ts agent iter hyp before after status notes; do
+    echo "$DISCARDED_LINES" | while IFS=$'\t' read -r ts agent iter hyp before after status notes rest; do
         printf "║  [%-8s] #%-3s %-52.52s ║\n" "$agent" "$iter" "$hyp"
         [[ -n "$notes" ]] && printf "║               Reason: %-44.44s ║\n" "$notes"
     done
 fi
 
 echo "╚══════════════════════════════════════════════════════════════════╝"
-
-if [[ -f "$ALERT_FILE" ]]; then
-    echo ""
-    echo "*** NEW BEST ALERT ***"
-    cat "$ALERT_FILE"
-fi
 
 echo ""
 echo "See shared/learned-constraints.md for known optimization constraints."

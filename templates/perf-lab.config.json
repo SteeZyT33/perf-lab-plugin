@@ -10,8 +10,38 @@
     "2164": "Opus 4 extended",
     "1487": "Recruiting target"
   },
-  "agents": ["alpha", "beta", "gamma"],
+  "parent_agent": "alpha",
+  "team_roles": ["experiment", "research", "adversary"],
+  "naming_convention": "parent-child",
   "source_files": ["src/engine.py"],
   "system_files": ["src/simulator.py", "src/problem.py"],
-  "notebook_name": ""
+  "notebook_name": "",
+  "research": {
+    "semantic_scholar_api_key": "",
+    "llama_cloud_api_key": "",
+    "paper_dir": "shared/Research/papers",
+    "auto_parse": true,
+    "llamaparse": {
+      "product_type": "parse_v2",
+      "tier": "agentic_plus",
+      "version": "latest",
+      "output_options": {
+        "markdown": {
+          "tables": {
+            "merge_continued_tables": true,
+            "compact_markdown_tables": true,
+            "output_tables_as_markdown": true
+          },
+          "inline_images": true,
+          "annotate_links": true
+        },
+        "images_to_save": ["embedded"]
+      },
+      "processing_options": {
+        "cost_optimizer": {
+          "enable": true
+        }
+      }
+    }
+  }
 }

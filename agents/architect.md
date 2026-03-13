@@ -65,4 +65,4 @@ Write `shared/Research/architect-design.md`:
 - Show your math for estimated improvement — don't hand-wave.
 - The implementation plan must be executable as a sequence of testable steps.
 - Respect constraints marked CONFIRMED by the adversary. Challenge only those marked WEAKENED or DISPROVEN.
-- Do NOT modify any code. The `/perf-lab:rewrite` skill handles implementation.
+- Do NOT modify any code. The rewrite step of `/perf-lab:plateau` handles implementation.

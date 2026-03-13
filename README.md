@@ -54,6 +54,8 @@ Optional fields (have defaults): `plateau_threshold` (10), `max_breakthrough_cyc
 | `/perf-lab:sweep` | Autonomous ralph-loop optimization |
 | `/perf-lab:plateau` | Detect plateau, run full breakthrough → rewrite pipeline |
 | `/perf-lab:swarm [N]` | Launch N parallel agents with differentiated strategies |
+| `/perf-lab:analyze` | Trace analysis — identify resource bottlenecks and idle cycles |
+| `/perf-lab:replay` | After architecture change, find DISCARDED experiments worth retrying |
 
 ### Multi-agent parallel mode
 
@@ -70,14 +72,14 @@ When optimization stalls (N consecutive DISCARDED/FAILED), run `/perf-lab:platea
 1. `@explorer` reads system source code for exploitable behaviors
 2. `@adversary` challenges impossibility claims from constraints
 3. `@architect` designs a fundamentally new approach using both findings
-4. `/perf-lab:rewrite` implements the new architecture with backup/rollback
+4. The rewrite step (within plateau) implements the new architecture with backup/rollback
 
 ## Architecture
 
 - **`shared/experiments.tsv`** — append-only experiment log (never edit rows)
 - **`shared/best-metric.txt`** — current best value
 - **`shared/learned-constraints.md`** — what works and what doesn't
-- **`shared/new-best-alert.txt`** — cross-agent coordination
+- **`shared/messages/`** — cross-agent coordination (new-best alerts, discoveries)
 - **`shared/Research/`** — explorer, adversary, and architect outputs
 - **`scripts/`** — config-driven bash scripts (all read `perf-lab.config.json`)
 - **`@analyst`** — read-only bottleneck analysis agent

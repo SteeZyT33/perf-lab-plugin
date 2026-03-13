@@ -43,9 +43,8 @@ case "${1:-}" in
         ITEM_ID=$(echo "$ITEM" | cut -f1)
         ITEM_DESC=$(echo "$ITEM" | cut -f4)
         # Update status to running
-        sed -i "s/^${ITEM_ID}\tqueued\t[^\t]*/&/" "$QUEUE"
         awk -F'\t' -v OFS='\t' -v id="$ITEM_ID" -v agent="$AGENT" -v ts="$(date -Iseconds)" \
-            '$1==id && $2=="queued" {$2="running"; $3=agent; $6=ts} 1' "$QUEUE" > "${QUEUE}.tmp" && mv "${QUEUE}.tmp" "$QUEUE"
+            '$1==id && $2=="queued" {$2="running"; $3=agent; $7=ts} 1' "$QUEUE" > "${QUEUE}.tmp" && mv "${QUEUE}.tmp" "$QUEUE"
         echo "Claimed #${ITEM_ID}: ${ITEM_DESC}"
         echo "$ITEM_DESC"
         ;;

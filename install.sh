@@ -14,6 +14,14 @@ if ! command -v jq &>/dev/null; then
     exit 1
 fi
 
+# Install Python dependency for paper parsing
+if ! python3 -c "import llama_parse" 2>/dev/null; then
+    echo "Installing llama-parse for paper processing..."
+    pip install llama-parse --break-system-packages --quiet 2>/dev/null || \
+        pip install llama-parse --quiet 2>/dev/null || \
+        echo "  Warning: Could not install llama-parse. Paper parsing will be unavailable."
+fi
+
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
@@ -36,7 +44,7 @@ chmod +x "$TARGET/scripts/"*.sh
 echo "  Copied scripts → scripts/ (chmod +x)"
 
 # Shared directory
-mkdir -p "$TARGET/shared/Research"
+mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-state"
 if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     CONFIG="$TARGET/perf-lab.config.json"
     if [[ -f "$CONFIG" ]]; then
@@ -44,7 +52,7 @@ if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     else
         METRIC="metric"
     fi
-    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC}_before\t${METRIC}_after\tstatus\tnotes" > "$TARGET/shared/experiments.tsv"
+    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC}_before\t${METRIC}_after\tstatus\tnotes\tduration_seconds" > "$TARGET/shared/experiments.tsv"
 fi
 echo "  Created shared/ with experiments.tsv"
 
@@ -54,10 +62,16 @@ if [[ ! -f "$TARGET/shared/learned-constraints.md" ]]; then
 fi
 echo "  Copied learned-constraints.md template"
 
+# Architecture changelog
+if [[ ! -f "$TARGET/shared/architecture-changelog.md" ]]; then
+    cp "$PLUGIN_DIR/templates/architecture-changelog.md" "$TARGET/shared/"
+fi
+echo "  Created architecture-changelog.md"
+
 # Prompt templates
 mkdir -p "$TARGET/prompts"
-cp "$PLUGIN_DIR/templates/prompts/"*.md "$TARGET/prompts/"
-echo "  Copied prompt templates → prompts/"
+cp "$PLUGIN_DIR/templates/prompts/agent-template.md" "$TARGET/prompts/"
+echo "  Copied agent-template.md → prompts/"
 
 # Config
 if [[ ! -f "$TARGET/perf-lab.config.json" ]]; then
@@ -66,6 +80,9 @@ if [[ ! -f "$TARGET/perf-lab.config.json" ]]; then
 else
     echo "  perf-lab.config.json already exists, skipping"
 fi
+
+# Git hooks
+"$PLUGIN_DIR/scripts/install-hooks.sh" "$TARGET" "$PLUGIN_DIR"
 
 # CLAUDE.md
 SECTION_MARKER="## Experiment Protocol (perf-lab)"
@@ -80,6 +97,17 @@ if [[ -f "$TARGET/CLAUDE.md" ]]; then
 else
     cp "$PLUGIN_DIR/templates/claude-md-section.md" "$TARGET/CLAUDE.md"
     echo "  Created CLAUDE.md from template"
+fi
+
+# API key warnings
+echo ""
+if [[ -z "${LLAMA_CLOUD_API_KEY:-}" ]]; then
+    echo "  Note: LLAMA_CLOUD_API_KEY not set. Paper parsing (LlamaParse) will be unavailable."
+    echo "        Set it or add to perf-lab.config.json at research.llama_cloud_api_key"
+fi
+if [[ -z "${SEMANTIC_SCHOLAR_API_KEY:-}" ]]; then
+    echo "  Note: SEMANTIC_SCHOLAR_API_KEY not set. Paper search will use free tier (low rate limits)."
+    echo "        Get a key at https://www.semanticscholar.org/product/api#api-key-form"
 fi
 
 echo ""

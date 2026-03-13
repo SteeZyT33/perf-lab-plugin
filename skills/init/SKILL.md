@@ -47,7 +47,12 @@ Questions to ask (skip any you already know):
 1. **"What metric are you optimizing?"** — suggest based on test output (e.g., "I see your tests print `CYCLES: 2146` — is the metric `cycles`?")
 2. **"Lower is better or higher is better?"** — suggest based on metric name (latency/cycles = lower, throughput/score = higher)
 3. **"What's the target?"** — and any milestone targets along the way
-4. **"How many parallel agents do you want?"** — default: 3 (alpha, beta, gamma)
+4. **"What's your team callsign and how many agents?"** — default: "Alpha" with 3 agents. Teams use **Parent-Child** naming where children are named by role:
+   > "Pick a callsign for your team (e.g., Alpha, Storm, Viper). Default: **Alpha**. With 3 agents, your team would be: **Alpha-Experiment**, **Alpha-Research**, **Alpha-Adversary**. Want more agents? With 5: add **Alpha-Explorer** and a second **Alpha-Experiment-2**."
+
+   Available roles: `experiment` (modifies code), `research` (queries NotebookLM/papers), `adversary` (challenges constraints), `explorer` (deep code reading), `analyst` (bottleneck patterns), `scout` (isolated worktree testing).
+
+   Write `"parent_agent"`, `"team_roles"`, and `"naming_convention": "parent-child"` to config.
 5. **"Do you have a NotebookLM notebook for research?"** — optional, can skip
 6. **"Do you have a Semantic Scholar API key?"** — optional. The free tier works but has low rate limits. Users can get a key at https://www.semanticscholar.org/product/api#api-key-form for higher limits. Leave blank if none.
 

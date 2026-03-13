@@ -79,16 +79,96 @@ If a paper's technique needs deeper reading than the abstract provides:
 2. If the project has NotebookLM configured, add the PDF as a source for future queries.
 3. If paywalled, note it in findings as "full text unavailable" and work from the abstract + TLDR.
 
-## 8. Save findings
+## 8. Deep Paper Research Pipeline
 
-File name encodes the source so other agents and future sessions know what's been researched and where it came from — no re-querying.
+For systematic paper collection beyond individual searches. Use when you need multiple papers on a topic, or when plateau-breaking requires deep literature review.
 
-**Naming convention**: `shared/Research/<source>-<topic-slug>.md`
+### Automated sources (Steps A-C)
 
-Examples:
-- `shared/Research/semantic-scholar-list-scheduling.md`
-- `shared/Research/web-search-ti-c7000-guide.md`
-- `shared/Research/notebooklm-hash-pipeline-interleaving.md`
+#### Step A: Search Semantic Scholar + ArXiv
+
+Use `./scripts/search-papers.sh` for targeted queries. Follow citation graphs for high-relevance papers. For each paper worth reading, add it to `shared/Research/paper-list.txt`.
+
+#### Step B: Fetch PDFs
+
+```bash
+./scripts/fetch-papers.sh shared/Research/paper-list.txt
+```
+
+Downloads open-access PDFs via direct URLs, Semantic Scholar, or ArXiv fallback. Paywalled papers are logged to `shared/Research/papers/paywalled.txt`.
+
+#### Step C: Web search
+
+Use web search for practical techniques, blog posts, and guides that complement the academic papers. Save findings to `shared/Research/findings/`.
+
+### Manual source (Step D) — Undermind
+
+Generate a targeted Undermind query:
+
+```bash
+./scripts/generate-undermind-prompt.sh ["optional topic"]
+```
+
+This reads current constraints and recent failures to generate a specific query. Tell the user:
+> "Paste this into undermind.ai, save results to `shared/Research/undermind-results.txt`"
+
+This is the one human-in-the-loop step — Undermind has no API. After the user provides results, parse them into `shared/Research/paper-list.txt` and run Step B.
+
+### Processing (Step E)
+
+```bash
+./scripts/process-papers.sh
+```
+
+Converts all PDFs in `shared/Research/papers/` to markdown via LlamaParse. Skips already-converted files. Requires `LLAMA_CLOUD_API_KEY` (env var or in `perf-lab.config.json` at `research.llama_cloud_api_key`).
+
+Free tier: 1,000 pages/day — enough for ~70-100 papers.
+
+### Loading (Step F) — NotebookLM
+
+If `notebook_name` is configured and the NotebookLM MCP server is available:
+
+```
+Use mcp__notebooklm-mcp__source_add(type="file") to add each markdown file.
+```
+
+If MCP is unavailable, tell the user to manually add files to NotebookLM.
+
+### Querying (Step G) — Synthesis
+
+Use `mcp__notebooklm-mcp__notebook_query` with targeted questions about techniques found across the papers. Save findings to `shared/Research/findings/`.
+
+### When to use the full pipeline vs. individual searches
+
+- **Individual search** (Steps 2-7): You need one or two specific papers or techniques
+- **Full pipeline** (Steps A-G): You're stuck at a plateau, exploring a new optimization domain, or the architect needs broad literature backing for a design
+
+## 9. Save findings
+
+Research outputs go in `shared/Research/findings/` — short, actionable summaries that experiment agents can safely read without blowing context. Full paper text lives in `shared/Research/papers/` and should never be read directly by experiment agents.
+
+### Directory structure
+
+```
+shared/Research/
+├── findings/          ← short summaries, safe for agents to read
+│   ├── semantic-scholar-list-scheduling.md
+│   ├── web-search-ti-c7000-guide.md
+│   └── notebooklm-hash-pipeline-interleaving.md
+├── papers/            ← full-text PDFs and markdown conversions (DO NOT read in experiment loop)
+│   ├── vliw-scheduling.pdf
+│   ├── vliw-scheduling.md
+│   └── paywalled.txt
+├── paper-list.txt     ← input for fetch-papers.sh
+├── undermind-prompt.txt
+├── system-exploits.md       ← from @explorer
+├── adversary-challenges.md  ← from @adversary
+└── architect-design.md      ← from @architect
+```
+
+### Findings format
+
+**Naming convention**: `shared/Research/findings/<source>-<topic-slug>.md`
 
 Each file contains:
 - **Source**: which source and the query/URL used
@@ -96,6 +176,8 @@ Each file contains:
 - **Actionable ideas** — concrete next experiments to try, ranked by estimated impact
 - **Relevant papers** (if Semantic Scholar) — title, year, citation count, and why it's relevant
 
-Before researching, check `shared/Research/` for existing files on the same topic — don't duplicate work.
+Keep findings files **short** (under 100 lines). They're meant to be read by experiment agents between iterations. If a paper needs deeper analysis, put the full notes in `papers/` and only the actionable takeaways in `findings/`.
+
+Before researching, check `shared/Research/findings/` for existing files on the same topic — don't duplicate work.
 
 Update `shared/learned-constraints.md` if research reveals new theoretical limits or disproves existing assumptions.
