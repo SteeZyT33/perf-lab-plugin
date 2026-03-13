@@ -1,6 +1,6 @@
 ---
 name: rewrite
-description: Implement a complete solution rewrite based on the architect's design — the one exception to small-change iteration
+description: Implement a complete solution rewrite based on the architect's design — the one exception to small-change iteration. Use after /perf-lab:plateau has produced an architect-design.md, when the user says "implement the redesign", "do the rewrite", or "try the new architecture." Requires an existing architect design and evidence of plateau.
 ---
 
 # Architecture Rewrite

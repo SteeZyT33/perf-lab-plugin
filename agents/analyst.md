@@ -3,6 +3,8 @@ name: analyst
 description: Read-only bottleneck analyzer — reviews experiment history and suggests next hypotheses
 tools:
   - Read
+  - Write
+  - Edit
   - Glob
   - Grep
   - Bash

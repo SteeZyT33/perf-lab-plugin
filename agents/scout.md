@@ -1,6 +1,7 @@
 ---
 name: scout
 description: Exploratory tester — implements speculative changes in isolation and reports results
+isolation: worktree
 tools:
   - Read
   - Write

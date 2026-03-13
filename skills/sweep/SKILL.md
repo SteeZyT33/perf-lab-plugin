@@ -1,6 +1,6 @@
 ---
 name: sweep
-description: Autonomous optimization loop — runs /perf-lab:experiment repeatedly via ralph-loop
+description: Autonomous optimization loop — runs /perf-lab:experiment repeatedly via ralph-loop until the target is hit or max iterations reached. Use this instead of /perf-lab:experiment when the user wants hands-off autonomous iteration, says "keep going", "run until done", "optimize on your own", or "don't stop until we hit the target."
 ---
 
 # Autonomous Sweep

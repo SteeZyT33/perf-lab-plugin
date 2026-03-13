@@ -1,6 +1,6 @@
 ---
 name: research
-description: Query NotebookLM for optimization research relevant to the current problem
+description: Query NotebookLM for optimization research relevant to the current problem. Use when the user says "look up", "research", "what do the papers say", "find techniques for", or when stuck and needing external knowledge to inform the next experiment.
 ---
 
 # Research Query

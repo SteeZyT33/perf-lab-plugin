@@ -1,6 +1,6 @@
 ---
 name: status
-description: Show the multi-agent experiment dashboard
+description: Show the multi-agent experiment dashboard with current best metric, per-agent stats, and target progress. Use this whenever the user asks about progress, results, "how are we doing", "what's the score", "show me the dashboard", or wants a summary of experiments so far.
 ---
 
 # Status Dashboard

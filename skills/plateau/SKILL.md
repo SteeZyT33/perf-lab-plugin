@@ -1,6 +1,6 @@
 ---
 name: plateau
-description: Detect optimization plateau and trigger the breakthrough sequence (explorer -> adversary -> architect)
+description: Detect optimization plateau and trigger the breakthrough sequence (explorer -> adversary -> architect). Use when the user says "we're stuck", "nothing is working", "plateau", "no progress", "need a new approach", or when you notice many consecutive DISCARDED/FAILED experiments. Also use proactively if /perf-lab:experiment has failed to improve the metric for several iterations.
 ---
 
 # Plateau Detection & Breakthrough

@@ -1,6 +1,6 @@
 ---
 name: experiment
-description: Run one optimization iteration — implement change, test, log result
+description: Run one optimization iteration — implement a single change, test it, log the result. Use this skill whenever the user wants to try something, make an improvement, test a hypothesis, optimize, or do "one more iteration." Also triggers on "try X", "what if we changed Y", or "make it faster/smaller/better."
 ---
 
 # Experiment Iteration
