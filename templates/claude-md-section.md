@@ -18,3 +18,10 @@
 - `/perf-lab:status` — show dashboard
 - `/perf-lab:research` — query NotebookLM for ideas
 - `/perf-lab:sweep` — autonomous optimization loop
+- `/perf-lab:plateau` — detect plateau, trigger breakthrough sequence (explorer → adversary → architect)
+- `/perf-lab:rewrite` — implement architect's redesign (backup → rewrite → evaluate)
+
+### Plateau Agents
+- `@explorer` — exhaustive source-code reader, finds exploitable behaviors
+- `@adversary` — challenges impossibility claims and constraint assumptions
+- `@architect` — designs fundamentally new approaches when incremental optimization stalls

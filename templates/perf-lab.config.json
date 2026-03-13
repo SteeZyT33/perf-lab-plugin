@@ -12,5 +12,9 @@
   },
   "agents": ["alpha", "beta", "gamma"],
   "max_iterations": 50,
-  "notebook_name": "Original Anthropic Take Home Research Papers"
+  "notebook_name": "Original Anthropic Take Home Research Papers",
+  "source_files": ["src/engine.py"],
+  "system_files": ["src/simulator.py", "src/problem.py"],
+  "constraints_file": "shared/learned-constraints.md",
+  "plateau_threshold": 10
 }
