@@ -8,9 +8,10 @@ description: Autonomous optimization loop — runs /perf-lab:experiment repeated
 Launch an autonomous optimization loop that runs `/perf-lab:experiment` repeatedly. The experiment skill has built-in plateau detection — when it triggers, the breakthrough sequence runs automatically and the sweep resumes.
 
 1. Read `perf-lab.config.json` for `max_total_iterations`, `target`, and `max_breakthrough_cycles`
-2. Run `./scripts/show-progress.sh` for current state
-3. Reset `shared/breakthrough-count.txt` to 0 (fresh sweep = fresh budget)
-4. Start the ralph loop:
+2. Check for agent state: if `shared/agent-state/` has a state file for this agent, run `/perf-lab:resume` to restore context instead of starting fresh
+3. Run `./scripts/show-progress.sh` for current state
+4. Reset `shared/breakthrough-count.txt` to 0 (fresh sweep = fresh budget)
+5. Start the ralph loop:
 
 ```
 /ralph-loop "Run /perf-lab:experiment each iteration. Never re-attempt DISCARDED experiments. Target: {{TARGET}} {{METRIC_NAME}}." --max-iterations {{MAX_TOTAL_ITERATIONS}}

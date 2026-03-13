@@ -10,12 +10,20 @@ description: Run one optimization iteration — implement a single change, test 
 3. Run `./scripts/show-progress.sh` — review past experiments, never re-attempt DISCARDED strategies
 4. Read `shared/best-metric.txt` for current baseline
 
+## Pick what to work on
+
+5. Check work queue ONCE at session start, then only after completing a queued item:
+   ```bash
+   ./scripts/work-queue.sh claim <agent>
+   ```
+   If a queued item is claimed, implement that. Otherwise, self-direct.
+6. Form a hypothesis (single, testable change)
+
 ## Execute ONE change
 
-5. Form a hypothesis (single, testable change)
-6. Implement the change in the solution file
-7. Run the test command from config — verify correctness first
-8. Log the result:
+7. Implement the change in the solution file
+8. Run the test command from config — verify correctness first
+9. Log the result:
    ```bash
    ./scripts/track-experiment.sh <agent> "<hypothesis>" <KEPT|DISCARDED|FAILED> ["notes"]
    ```
@@ -23,10 +31,38 @@ description: Run one optimization iteration — implement a single change, test 
    - **DISCARDED**: tests pass but metric worse/same — revert the change
    - **FAILED**: tests fail — revert the change
 
-9. If KEPT: check if you beat any targets, update `shared/learned-constraints.md` with what you learned
-10. Run `./scripts/check-new-best.sh <agent>` — if another agent found something better, consider rebasing
+10. If working from a queue item, mark it:
+    ```bash
+    ./scripts/work-queue.sh complete <id> <done|abandoned>
+    ```
+
+11. If KEPT: check if you beat any targets, update `shared/learned-constraints.md` with what you learned
+12. Run `./scripts/check-new-best.sh <agent>` — if another agent found something better, consider rebasing
 
 Never modify test files. Never make multiple changes at once.
+
+## Periodic Maintenance (passive, between experiments)
+
+Track your iteration count internally. The DEFAULT action is always: code, test, log.
+
+**Every 5th iteration** — update agent state:
+Write `shared/agent-state/<agent>.md`:
+```markdown
+# Agent: <name>
+## Last Updated: <timestamp>
+## Current Metric: <latest metric value>
+## Current Strategy: <one-line strategy description>
+## What I'm Working On: <current focus>
+## What I've Learned This Session:
+- <key findings from this session>
+## Next Thing To Try: <planned next experiment>
+```
+
+**Every 10th iteration** — check messages:
+```bash
+./scripts/messages.sh read <agent>
+```
+If a discovery message is relevant, factor it into your next hypothesis.
 
 ## Auto-Plateau Detection
 

@@ -52,9 +52,21 @@ This ensures the breakthrough sequence has fresh external ideas, not just intern
 4. **Wait** for both to complete, then **spawn architect agent** (`@architect`):
    - Reads both research files + experiment history
    - Writes `shared/Research/architect-design.md`
+   - Breaks the implementation plan into work queue items:
+     ```bash
+     ./scripts/work-queue.sh add "step 1: <description>" high
+     ./scripts/work-queue.sh add "step 2: <description>" high
+     ```
+   - Each step becomes a claimable item so agents (or /perf-lab:rewrite) can execute them
 
-5. **Report** to the user:
+5. **Notify** via messaging:
+   ```bash
+   ./scripts/messages.sh send architect all discovery "Breakthrough design ready. See shared/Research/architect-design.md. Run /perf-lab:rewrite to implement."
+   ```
+
+6. **Report** to the user:
    - Summary of exploits found
    - Summary of constraints challenged
    - Architecture design overview
+   - Work queue items created
    - "Run `/perf-lab:rewrite` to implement the new architecture."

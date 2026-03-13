@@ -16,5 +16,7 @@ description: Show the multi-agent experiment dashboard with current best metric,
    "Approaching plateau — N consecutive failures. Consider /perf-lab:plateau"
 5. Budget check: if `shared/breakthrough-count.txt` exists, show:
    "Breakthrough cycles used: N / max_breakthrough_cycles"
+6. Work queue: run `./scripts/work-queue.sh list` — show queued/running count
+7. Messages: run `./scripts/messages.sh list` — show recent message count
 
 Keep output concise. This is a glance, not an analysis. Under 20 lines.

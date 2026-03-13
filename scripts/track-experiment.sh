@@ -75,7 +75,13 @@ if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" && "$METRIC_BEFORE" != "-" ]
     if is_better "$METRIC_AFTER" "$METRIC_BEFORE"; then
         echo "$METRIC_AFTER" > "$BEST_FILE"
         cp "$PROJECT_DIR/$SOLUTION_FILE" "$BEST_SOLUTION"
+        # Legacy alert file (for backward compat)
         echo "AGENT ${AGENT} achieved ${METRIC_AFTER} ${METRIC_NAME} at ${TIMESTAMP}. Strategy: ${HYPOTHESIS}" > "$ALERT_FILE"
+        # Send message to all agents
+        if [[ -x "$SCRIPT_DIR/messages.sh" ]]; then
+            "$SCRIPT_DIR/messages.sh" send "$AGENT" all new-best \
+                "NEW BEST: ${METRIC_AFTER} ${METRIC_NAME} (was ${METRIC_BEFORE}). Strategy: ${HYPOTHESIS}"
+        fi
         echo ""
         echo "*** NEW BEST: ${METRIC_AFTER} ${METRIC_NAME} (was ${METRIC_BEFORE}) ***"
     fi

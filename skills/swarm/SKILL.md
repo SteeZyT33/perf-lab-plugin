@@ -77,7 +77,9 @@ All agents share via symlinked `shared/`:
 - `best-metric.txt` — updated atomically by `track-experiment.sh`
 - `learned-constraints.md` — any agent can append findings
 - `Research/` — shared research findings
-- `new-best-alert.txt` — cross-agent best-score notifications
+- `messages/` — cross-agent messaging (discoveries, new-best alerts, warnings)
+- `agent-state/` — per-agent checkpoints for session recovery
+- `work-queue.tsv` — shared task queue for coordinated work
 
 Each agent follows the experiment protocol:
 - Log ALL results via `./scripts/track-experiment.sh agent-{i} ...`
