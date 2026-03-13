@@ -18,7 +18,7 @@ SHARED_DIR="$PROJECT_DIR/shared"
 TSV="$SHARED_DIR/experiments.tsv"
 BEST_FILE="$SHARED_DIR/best-metric.txt"
 BEST_SOLUTION="$SHARED_DIR/best-solution.${SOLUTION_FILE##*.}"
-ALERT_FILE="$SHARED_DIR/new-best-alert.txt"
+ALERT_FILE="$SHARED_DIR/new-best-alert.txt"  # legacy, kept for backward compat
 
 is_better() { # $1=new $2=old
   if [[ "$DIRECTION" == "lower" ]]; then

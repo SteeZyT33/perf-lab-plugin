@@ -11,15 +11,7 @@
     "1487": "Recruiting target"
   },
   "agents": ["alpha", "beta", "gamma"],
-  "max_iterations": 50,
-  "notebook_name": "Original Anthropic Take Home Research Papers",
-  "semantic_scholar_api_key": "",
   "source_files": ["src/engine.py"],
   "system_files": ["src/simulator.py", "src/problem.py"],
-  "constraints_file": "shared/learned-constraints.md",
-  "plateau_threshold": 10,
-  "max_breakthrough_cycles": 3,
-  "max_total_iterations": 200,
-  "rewrite_time_budget_minutes": 60,
-  "breakthrough_research_budget": 5
+  "notebook_name": ""
 }

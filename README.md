@@ -40,7 +40,8 @@ Edit `perf-lab.config.json` in your project root:
 - `parse_metric`: shell command piped test output to extract the metric value
 - `source_files`: files the adversary reads to challenge constraints
 - `system_files`: files the explorer reads to find exploitable behaviors
-- `plateau_threshold`: consecutive DISCARDED/FAILED experiments before plateau detection triggers
+
+Optional fields (have defaults): `plateau_threshold` (10), `max_breakthrough_cycles` (3), `max_total_iterations` (200), `rewrite_time_budget_minutes` (60), `breakthrough_research_budget` (5), `semantic_scholar_api_key`, `constraints_file`
 
 ## Usage
 
@@ -51,8 +52,7 @@ Edit `perf-lab.config.json` in your project root:
 | `/perf-lab:status` | Show experiment dashboard |
 | `/perf-lab:research` | Query NotebookLM for ideas |
 | `/perf-lab:sweep` | Autonomous ralph-loop optimization |
-| `/perf-lab:plateau` | Detect plateau, trigger breakthrough sequence |
-| `/perf-lab:rewrite` | Implement architect's redesign with backup/rollback |
+| `/perf-lab:plateau` | Detect plateau, run full breakthrough → rewrite pipeline |
 | `/perf-lab:swarm [N]` | Launch N parallel agents with differentiated strategies |
 
 ### Multi-agent parallel mode

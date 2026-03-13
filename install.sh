@@ -17,19 +17,21 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Skills
+# Skills (merge into existing directory; remove placeholder file if present)
+[[ -f "$TARGET/.claude/skills" ]] && rm "$TARGET/.claude/skills"
 mkdir -p "$TARGET/.claude/skills"
-cp -r "$PLUGIN_DIR/skills/"* "$TARGET/.claude/skills/"
+cp -a "$PLUGIN_DIR/skills/." "$TARGET/.claude/skills/"
 echo "  Copied skills → .claude/skills/"
 
 # Agents
+[[ -f "$TARGET/.claude/agents" ]] && rm "$TARGET/.claude/agents"
 mkdir -p "$TARGET/.claude/agents"
-cp "$PLUGIN_DIR/agents/"*.md "$TARGET/.claude/agents/"
+cp -a "$PLUGIN_DIR/agents/." "$TARGET/.claude/agents/"
 echo "  Copied agents → .claude/agents/"
 
 # Scripts
 mkdir -p "$TARGET/scripts"
-cp "$PLUGIN_DIR/scripts/"*.sh "$TARGET/scripts/"
+cp -a "$PLUGIN_DIR/scripts/." "$TARGET/scripts/"
 chmod +x "$TARGET/scripts/"*.sh
 echo "  Copied scripts → scripts/ (chmod +x)"
 

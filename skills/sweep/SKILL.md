@@ -5,37 +5,26 @@ description: Autonomous optimization loop — runs /perf-lab:experiment repeated
 
 # Autonomous Sweep
 
-Launch an autonomous optimization loop that runs `/perf-lab:experiment` repeatedly. The experiment skill has built-in plateau detection — when it triggers, the breakthrough sequence runs automatically and the sweep resumes.
+Launch an autonomous optimization loop. The experiment skill has built-in plateau detection — breakthroughs run automatically.
 
-1. Read `perf-lab.config.json` for `max_total_iterations`, `target`, and `max_breakthrough_cycles`
-2. Check for agent state: if `shared/agent-state/` has a state file for this agent, run `/perf-lab:resume` to restore context instead of starting fresh
+## Startup
+
+1. Read `perf-lab.config.json` for `max_total_iterations` (default: 200), `target`
+2. **Resume check**: if `shared/agent-state/<agent>.md` exists, read it to restore context (strategy, learnings, next planned experiment) instead of starting fresh
 3. Run `./scripts/show-progress.sh` for current state
-4. Reset `shared/breakthrough-count.txt` to 0 (fresh sweep = fresh budget)
+4. Reset `shared/breakthrough-count.txt` to 0
 5. Start the ralph loop:
 
 ```
 /ralph-loop "Run /perf-lab:experiment each iteration. Never re-attempt DISCARDED experiments. Target: {{TARGET}} {{METRIC_NAME}}." --max-iterations {{MAX_TOTAL_ITERATIONS}}
 ```
 
-Replace `{{TARGET}}`, `{{METRIC_NAME}}`, and `{{MAX_TOTAL_ITERATIONS}}` from config.
+## How breakthroughs work during a sweep
 
-## Sweep with Autonomous Breakthroughs
+When plateau is detected, the experiment skill auto-triggers `/perf-lab:plateau` which runs the full breakthrough-to-rewrite pipeline. After it completes:
 
-The sweep runs `/perf-lab:experiment` in a loop. When a plateau is detected, the experiment skill auto-triggers `/perf-lab:plateau`, which runs the breakthrough sequence. After breakthrough completes:
+1. **Rewrite improved**: sweep continues on new architecture
+2. **Rewrite failed**: sweep continues with existing code, breakthrough count incremented
+3. **Max breakthroughs hit**: sweep exits, reports to user
 
-1. If `/perf-lab:rewrite` produced an improvement: the sweep continues on the new architecture. The plateau counter stays incremented but the consecutive-failure count resets.
-2. If `/perf-lab:rewrite` did NOT improve: the breakthrough count is still incremented, the rewrite is reverted, and the sweep continues with the existing code.
-3. If `max_breakthrough_cycles` reached: exit the sweep and report to the user.
-
-The full autonomous loop:
-
-```
-sweep → experiment → experiment → ... → plateau detected →
-  research refresh → explore/challenge → architect → rewrite →
-  sweep resumes → experiment → experiment → ...
-```
-
-This continues until either:
-- Target metric is reached
-- `max_total_iterations` hit (budget exhausted)
-- `max_breakthrough_cycles` hit (system needs human guidance)
+Exits when: target reached, `max_total_iterations` hit, or `max_breakthrough_cycles` exhausted.

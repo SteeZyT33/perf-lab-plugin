@@ -6,24 +6,16 @@
 
 ### Rules
 1. ONE change per experiment. Test. Log. Keep or revert.
-2. Never modify test files — validate with `git diff origin/main tests/`
+2. Never modify test files
 3. Read `shared/learned-constraints.md` before proposing changes
-4. Run `./scripts/show-progress.sh` before each iteration
-5. Never re-attempt DISCARDED strategies from experiments.tsv
-6. Log ALL results: `./scripts/track-experiment.sh <agent> "<hypothesis>" <status> ["notes"]`
-7. Check for new bests: `./scripts/check-new-best.sh <agent>`
+4. Never re-attempt DISCARDED strategies from experiments.tsv
+5. Log ALL results: `./scripts/track-experiment.sh <agent> "<hypothesis>" <status> ["notes"]`
 
 ### Commands
 - `/perf-lab:init` — initialize perf-lab in a new project (guided setup)
 - `/perf-lab:experiment` — run one iteration
 - `/perf-lab:status` — show dashboard
-- `/perf-lab:research` — query NotebookLM for ideas
-- `/perf-lab:sweep` — autonomous optimization loop
-- `/perf-lab:plateau` — detect plateau, trigger breakthrough sequence (explorer → adversary → architect)
-- `/perf-lab:rewrite` — implement architect's redesign (backup → rewrite → evaluate)
+- `/perf-lab:research` — search papers, web, NotebookLM
+- `/perf-lab:sweep` — autonomous optimization loop (with auto-resume)
+- `/perf-lab:plateau` — detect plateau, run full breakthrough → rewrite pipeline
 - `/perf-lab:swarm [N]` — launch N parallel agents with differentiated strategies
-
-### Plateau Agents
-- `@explorer` — exhaustive source-code reader, finds exploitable behaviors
-- `@adversary` — challenges impossibility claims and constraint assumptions
-- `@architect` — designs fundamentally new approaches when incremental optimization stalls
