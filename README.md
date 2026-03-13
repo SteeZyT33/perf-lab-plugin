@@ -53,6 +53,7 @@ Edit `perf-lab.config.json` in your project root:
 | `/perf-lab:sweep` | Autonomous ralph-loop optimization |
 | `/perf-lab:plateau` | Detect plateau, trigger breakthrough sequence |
 | `/perf-lab:rewrite` | Implement architect's redesign with backup/rollback |
+| `/perf-lab:swarm [N]` | Launch N parallel agents with differentiated strategies |
 
 ### Multi-agent parallel mode
 

@@ -21,6 +21,7 @@
 - `/perf-lab:sweep` — autonomous optimization loop
 - `/perf-lab:plateau` — detect plateau, trigger breakthrough sequence (explorer → adversary → architect)
 - `/perf-lab:rewrite` — implement architect's redesign (backup → rewrite → evaluate)
+- `/perf-lab:swarm [N]` — launch N parallel agents with differentiated strategies
 
 ### Plateau Agents
 - `@explorer` — exhaustive source-code reader, finds exploitable behaviors
