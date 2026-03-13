@@ -12,3 +12,9 @@ description: Show the multi-agent experiment dashboard with current best metric,
    - Which targets have been hit
    - Any new-best alerts pending
 3. If patterns emerge (e.g., one agent's strategy consistently works), call that out
+4. Plateau warning: if last 5+ experiments are all DISCARDED/FAILED, flag it:
+   "Approaching plateau — N consecutive failures. Consider /perf-lab:plateau"
+5. Budget check: if `shared/breakthrough-count.txt` exists, show:
+   "Breakthrough cycles used: N / max_breakthrough_cycles"
+
+Keep output concise. This is a glance, not an analysis. Under 20 lines.
