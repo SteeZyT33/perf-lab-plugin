@@ -7,23 +7,39 @@ description: Detect optimization plateau and trigger the breakthrough sequence (
 
 Detects when all agents are stuck and orchestrates the breakthrough sequence.
 
+**Manual override**: If the user explicitly requests a breakthrough sequence (e.g., "we're stuck", "need new approach"), skip the plateau threshold check and proceed directly to Step 2. The user's judgment overrides the numerical threshold.
+
 ## Step 1: Detect plateau
 
-1. Read `perf-lab.config.json` for `plateau_threshold` (default: 10)
+1. Read `perf-lab.config.json` for `plateau_threshold` (default: 10) and `max_breakthrough_cycles` (default: 3)
 2. Read `shared/experiments.tsv`
 3. Check the last N experiments across ALL agents (where N = plateau_threshold)
 4. Plateau is confirmed if ALL of the last N experiments are DISCARDED or FAILED (zero KEPT)
 
 If no plateau detected, report current status and exit.
 
+5. Check `shared/breakthrough-count.txt` (default: 0)
+   - If count >= `max_breakthrough_cycles`: STOP. Report to user: "Hit max breakthrough cycles (N). The system has tried N architectural rewrites without reaching target. Human review recommended."
+   - Otherwise: increment the count and proceed
+
+## Step 1.5: Research refresh
+
+Before launching explorer/adversary, spawn a research sub-agent to pull fresh external knowledge:
+
+1. Read the last N DISCARDED experiments and find the most common failure reason
+2. Formulate a research query based on that bottleneck
+3. Run `/perf-lab:research` with that query, limited to `breakthrough_research_budget` queries (default: 5)
+4. Findings save to `shared/Research/` per the research skill's naming convention
+
+This ensures the breakthrough sequence has fresh external ideas, not just internal re-analysis of the same problem.
+
 ## Step 2: Trigger breakthrough sequence
 
-If plateau confirmed:
-
-1. **Announce**: "Plateau detected — last {{N}} experiments produced no improvement. Launching breakthrough sequence."
+1. **Announce**: "Plateau detected — last {{N}} experiments produced no improvement. Breakthrough cycle {{count}}/{{max}}. Launching breakthrough sequence."
 
 2. **Spawn explorer agent** (`@explorer`):
    - Reads system files from config `system_files`
+   - Reads fresh research from Step 1.5
    - Writes `shared/Research/system-exploits.md`
 
 3. **Spawn adversary agent** (`@adversary`):

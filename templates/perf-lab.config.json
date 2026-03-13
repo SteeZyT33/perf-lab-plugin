@@ -17,5 +17,8 @@
   "source_files": ["src/engine.py"],
   "system_files": ["src/simulator.py", "src/problem.py"],
   "constraints_file": "shared/learned-constraints.md",
-  "plateau_threshold": 10
+  "plateau_threshold": 10,
+  "max_breakthrough_cycles": 3,
+  "max_total_iterations": 200,
+  "breakthrough_research_budget": 5
 }

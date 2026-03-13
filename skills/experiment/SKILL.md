@@ -27,3 +27,17 @@ description: Run one optimization iteration — implement a single change, test 
 10. Run `./scripts/check-new-best.sh <agent>` — if another agent found something better, consider rebasing
 
 Never modify test files. Never make multiple changes at once.
+
+## Auto-Plateau Detection
+
+After logging each experiment result, check for plateau:
+
+1. Read the last `plateau_threshold` entries from `shared/experiments.tsv` (default: 10 from config)
+2. If ALL are DISCARDED or FAILED (zero KEPT):
+   - Read `shared/breakthrough-count.txt` (default: 0)
+   - If count < `max_breakthrough_cycles` from config (default: 3):
+     - Increment `shared/breakthrough-count.txt`
+     - Auto-invoke `/perf-lab:plateau`
+   - If count >= `max_breakthrough_cycles`:
+     - STOP. Report to user: "Hit max breakthrough cycles (N). The system has tried N architectural rewrites without reaching target. Human review recommended."
+3. If not all failures, continue normal iteration
