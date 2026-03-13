@@ -13,7 +13,7 @@ Launch an autonomous optimization loop that runs `/perf-lab:experiment` repeated
 4. Start the ralph loop:
 
 ```
-/ralph-loop "Run /perf-lab:experiment each iteration. Run ./scripts/show-progress.sh before each iteration. Never re-attempt DISCARDED experiments. Log everything with ./scripts/track-experiment.sh. Target: {{TARGET}} {{METRIC_NAME}}." --max-iterations {{MAX_TOTAL_ITERATIONS}}
+/ralph-loop "Run /perf-lab:experiment each iteration. Never re-attempt DISCARDED experiments. Target: {{TARGET}} {{METRIC_NAME}}." --max-iterations {{MAX_TOTAL_ITERATIONS}}
 ```
 
 Replace `{{TARGET}}`, `{{METRIC_NAME}}`, and `{{MAX_TOTAL_ITERATIONS}}` from config.
