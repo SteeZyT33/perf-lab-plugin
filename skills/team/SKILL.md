@@ -59,6 +59,11 @@ Agent:
     Never go idle. If you finish a task, SendMessage your team lead for the next one,
     AND start your best guess at the next experiment while waiting.
 
+    PULSE: Before starting a test, write your phase to your pulse file:
+    jq -n --arg agent "<AGENT_ID>-experiment" --arg phase "testing" --arg last "$(date -Iseconds)" \
+      '{agent: $agent, phase: $phase, last_activity: $last}' > shared/agent-pulse/<AGENT_ID>-experiment.json
+    track-experiment.sh handles post-experiment pulse updates.
+
     Read CLAUDE.md, shared/learned-constraints.md, and run ./scripts/show-progress.sh first.
 ```
 
@@ -74,6 +79,8 @@ Agent:
 
     YOUR JOB: Find optimization techniques via papers, NotebookLM, web search.
     Write findings to shared/Research/findings/ for the whole fleet.
+    You have Playwright browser automation for downloading paywalled papers —
+    use it when direct curl/fetch fails (403, paywall, JS-rendered sites).
 
     RULES:
     - Communicate with your team lead (<TEAM_NAME>) via SendMessage
@@ -81,6 +88,10 @@ Agent:
     - You must NEVER create Agent Teams or tmux sessions
     - NEVER read shared/Research/papers/ directly (context killer)
     - Write findings to shared/Research/findings/<AGENT_ID>-<topic>.md
+
+    PULSE: Before starting a research query, write your phase to your pulse file:
+    jq -n --arg agent "<AGENT_ID>-research" --arg phase "querying" --arg last "$(date -Iseconds)" \
+      '{agent: $agent, phase: $phase, last_activity: $last}' > shared/agent-pulse/<AGENT_ID>-research.json
 
     STAY ACTIVE: After delivering findings, start the next research query.
     Check shared/learned-constraints.md for areas that need deeper investigation.
@@ -180,3 +191,18 @@ Then immediately begin your team lead loop:
 - Check messages every few minutes: `./scripts/messages.sh read <AGENT_ID>`
 - Relay breakthroughs from other teams to your teammates
 - When a teammate finishes a task, assign the next one immediately
+
+## Team-Internal Heartbeat Protocol
+
+Every 5 iterations, the team lead monitors teammate health:
+
+1. **Read pulse files**: Check `shared/agent-pulse/<AGENT_ID>-*.json` for each teammate
+2. **Stuck detection**: If a teammate has been in "testing" phase for >2 minutes (compare `last_activity` to now):
+   - SendMessage the teammate: "You appear stuck in testing. Report status or move on."
+   - If still stuck after another cycle, reassign their current work to a different teammate or run it yourself
+3. **Missing pulse**: If a teammate has no pulse file at all:
+   - Alert Jarvis: `./scripts/messages.sh send <AGENT_ID> all alert "Teammate <name> has no pulse — may be dead"`
+4. **Team health summary**: Every 5 iterations, send a summary to Jarvis:
+   ```bash
+   ./scripts/messages.sh send <AGENT_ID> all team-health "Team <TEAM_NAME>: <N> active, <N> stuck, <N> missing. Experiments: <total> (<kept> kept)"
+   ```
