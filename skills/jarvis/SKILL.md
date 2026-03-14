@@ -1,6 +1,6 @@
 ---
 name: jarvis
-description: "Jarvis5A — Fleet orchestrator for perf-lab v3. Use when the user wants to launch research teams, check fleet status, spawn additional sessions, relay breakthroughs, or coordinate the multi-agent swarm. Triggers on: 'jarvis', 'launch teams', 'fleet status', 'spawn more agents', 'how are the teams doing', 'start the swarm', 'captain report'. Supports subcommands: launch, status, relay, expand, teardown."
+description: "Jarvis5A — Fleet orchestrator for perf-lab v4. Use when the user wants to launch research teams, check fleet status, spawn additional sessions, relay breakthroughs, shut down the fleet, or coordinate the multi-agent swarm. Triggers on: 'jarvis', 'launch teams', 'fleet status', 'spawn more agents', 'how are the teams doing', 'start the swarm', 'shutdown', 'shut down'. Supports subcommands: launch, status, relay, expand, teardown, shutdown."
 ---
 
 # Jarvis5A — Fleet Orchestrator
@@ -274,6 +274,13 @@ Add N more teams to the running fleet. Uses next unused Greek names.
 
 ### `/perf-lab:jarvis teardown`
 Graceful shutdown. Show final results, confirm with user, then kill sessions.
+
+### `/perf-lab:jarvis shutdown`
+Immediate fleet shutdown. Kills all tmux sessions (research teams + son-of-anton) without ceremony. Use before plugin updates or when you need a clean stop.
+```bash
+./scripts/shutdown-fleet.sh --force
+```
+For interactive confirmation, omit `--force`.
 
 If no subcommand is given, auto-detect phase from system state.
 

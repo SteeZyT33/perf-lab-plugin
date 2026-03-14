@@ -32,16 +32,10 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Write plugin_dir to config so launch-agent.sh can pass --plugin-dir to claude
-if [[ -f "$TARGET/perf-lab.config.json" ]]; then
-    if ! jq -e '.plugin_dir' "$TARGET/perf-lab.config.json" &>/dev/null; then
-        jq --arg path "$PLUGIN_DIR" '. + {plugin_dir: $path}' "$TARGET/perf-lab.config.json" > "$TARGET/perf-lab.config.json.tmp"
-        mv "$TARGET/perf-lab.config.json.tmp" "$TARGET/perf-lab.config.json"
-        echo "  Set plugin_dir in perf-lab.config.json → $PLUGIN_DIR"
-    else
-        echo "  plugin_dir already set in perf-lab.config.json"
-    fi
-fi
+# Skills and agents are loaded by the plugin system (perf-lab@s-taylor-labs).
+# No need to copy them — they're namespaced as /perf-lab:* and @perf-lab:* automatically.
+# To install the plugin: /plugin marketplace add SteeZyT33/s-taylor-labs
+#                        /plugin install perf-lab@s-taylor-labs
 
 # Scripts
 mkdir -p "$TARGET/scripts"
@@ -123,9 +117,7 @@ if [[ -z "${GEMINI_API_KEY:-}" ]]; then
 fi
 
 echo ""
-echo "Done! Plugin installed via local reference (instant updates, no marketplace)."
-echo ""
-echo "Next steps:"
+echo "Done! Next steps:"
 echo "  1. Edit perf-lab.config.json with your metric, test command, and targets"
 echo "  2. Edit prompts/*.md with agent-specific strategies"
 echo "  3. Run /perf-lab:jarvis to launch research teams (Jarvis5A orchestrator)"

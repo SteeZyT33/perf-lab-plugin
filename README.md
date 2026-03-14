@@ -73,7 +73,11 @@ cd /path/to/your/project
 /path/to/perf-lab-plugin/install.sh .
 ```
 
-This registers the plugin as a local directory-based marketplace in `.claude/settings.local.json`. After running install.sh, activate with `/plugin install perf-lab@perf-lab` in the target project. Every file save in the plugin repo is immediately live — run `/reload-plugins` to pick up changes. For quick testing without installing, use `claude --plugin-dir /path/to/perf-lab-plugin`.
+Then install the plugin:
+```bash
+/plugin marketplace add SteeZyT33/s-taylor-labs
+/plugin install perf-lab@s-taylor-labs
+```
 
 Requires: `jq`, `git`, `tmux` (for Layer 3).
 

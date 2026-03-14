@@ -7,7 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="${PERF_LAB_PROJECT:-$(dirname "$SCRIPT_DIR")}"
 CONFIG="$PROJECT_DIR/perf-lab.config.json"
 
-PERF_LAB_PLUGIN_DIR="${PERF_LAB_PLUGIN_DIR:-$(jq -r '.plugin_dir // ""' "$CONFIG" 2>/dev/null)}"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
 if [[ $# -lt 1 ]]; then
@@ -71,7 +70,7 @@ LAUNCHER="$WORKTREE_DIR/.perf-lab-launch.sh"
 cat > "$LAUNCHER" <<LAUNCHER_EOF
 #!/usr/bin/env bash
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS=64000
-claude${PERF_LAB_PLUGIN_DIR:+ --plugin-dir '${PERF_LAB_PLUGIN_DIR}'} --dangerously-skip-permissions "\$(cat '${PROMPT_DST}')"
+claude --dangerously-skip-permissions "\$(cat '${PROMPT_DST}')"
 exec bash
 LAUNCHER_EOF
 chmod +x "$LAUNCHER"
