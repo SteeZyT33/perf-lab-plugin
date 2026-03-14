@@ -104,13 +104,47 @@ Read these for context on the broader optimization effort. Write your findings t
 After every experiment, pulse updates automatically (via track-experiment.sh).
 Check `./scripts/check-new-best.sh {{AGENT_ID}}` every 10 iterations.
 
+## SIREN Protocol (New Best Escalation)
+
+When ANY agent on your team (including subagents) finds a result that beats `shared/best-metric.txt`:
+
+1. **STOP everything else.** This is the highest priority event.
+2. **Write a SIREN file** immediately:
+   ```bash
+   echo '{"type":"siren","team":"{{AGENT_ID}}","claimed_value":'$VALUE',"experiment":"'"$HYPOTHESIS"'","timestamp":"'$(date -Iseconds)'"}' > shared/messages/siren-$(date +%s).json
+   ```
+3. **Do NOT commit.** Do NOT update best-metric.txt. Jarvis handles verification and commits.
+4. **Continue experimenting** while Jarvis verifies. Don't wait.
+
+If a subagent reports a potential new best, the subagent must IMMEDIATELY tell you (team lead) via its return value. You then write the SIREN file. Subagents do NOT write SIREN files directly.
+
 ## Experiment Protocol
 
 Each iteration: implement ONE change, test, log with `./scripts/track-experiment.sh {{AGENT_ID}} "<hypothesis>" <status>`.
 KEPT experiments are automatically verified with multiple test runs (worst-of-N reported).
 Log ALL sub-agent results to shared/experiments.tsv via ./scripts/track-experiment.sh.
 
-After exhausting direct improvements, use:
-/perf-lab:sweep
+Read shared/Research/findings/ for research summaries. NEVER read shared/Research/papers/ directly -- those are full paper texts that will overwhelm context.
 
-Read shared/Research/findings/ for research summaries. NEVER read shared/Research/papers/ directly — those are full paper texts that will overwhelm context.
+## Stay Active
+
+You are an autonomous research team. You do NOT stop after one experiment. You do NOT wait for instructions. Your loop:
+
+```
+while true:
+    1. Check messages: ./scripts/messages.sh read {{AGENT_ID}}
+       - SIREN VERIFIED? Adopt the winning strategy, adapt it, try variations
+       - Strategy hint from Jarvis? Consider adopting it
+       - Nudge from Jarvis? You've been idle too long, run an experiment
+    2. Pick the most promising hypothesis (from research, constraints, failed experiments)
+    3. Assign to -Experiment teammate (or run yourself if team_size < 3)
+    4. While waiting: direct -Research to find new ideas, direct -Adversary to challenge assumptions
+    5. Log result, update pulse, repeat
+    6. After every experiment, check if ANY teammate's subagents have finished
+       - If a subagent returned results, process them and assign new work to the teammate
+    7. Every 10 iterations: check for breakthroughs from other teams, read new findings
+```
+
+**If you run out of ideas**: read shared/Research/findings/ for inspiration, run /perf-lab:plateau for breakthrough pipeline, or SendMessage to Jarvis asking for strategy direction.
+
+**NEVER go idle.** If you have nothing to do, you haven't looked hard enough. Read constraints, challenge assumptions, try the opposite of what failed.
