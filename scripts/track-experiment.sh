@@ -159,6 +159,22 @@ jq -n \
   '{agent: $agent, iteration: $iter, phase: $phase, last_activity: $last, current_hypothesis: $hyp, best_metric: $best, experiments_kept: $kept, experiments_total: $total}' \
   > "$PULSE_FILE"
 
+# Git branch advancement: auto-commit KEPT, auto-revert DISCARDED on perf-lab/* branches
+CURRENT_BRANCH=$(cd "$PROJECT_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [[ "$CURRENT_BRANCH" == perf-lab/* ]]; then
+    if [[ "$STATUS" == "KEPT" ]]; then
+        (
+            cd "$PROJECT_DIR"
+            git add -A && git commit -m "exp(${AGENT}): ${HYPOTHESIS} -- ${METRIC_AFTER}" 2>/dev/null
+        ) || echo "Warning: git commit failed for KEPT experiment (non-fatal)"
+    elif [[ "$STATUS" == "DISCARDED" ]]; then
+        (
+            cd "$PROJECT_DIR"
+            git reset --hard HEAD 2>/dev/null
+        ) || echo "Warning: git reset failed for DISCARDED experiment (non-fatal)"
+    fi
+fi
+
 # Bootstrap: first KEPT experiment establishes the baseline best
 if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" ]]; then
     if [[ "$METRIC_BEFORE" == "-" ]]; then

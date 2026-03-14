@@ -440,15 +440,21 @@ Any agent finds potential new best
 
 ### On Verified New Best
 
-1. **Commit** from main worktree:
+1. **Cherry-pick** from the team's worktree branch:
    ```bash
-   git add <changed files>
-   git commit -m "perf(<metric>): <old> -> <new> (<team>, experiment #<N>)
+   WINNING_COMMIT=$(cd worktrees/<team> && git log -1 --format="%H")
+   git cherry-pick "$WINNING_COMMIT" || {
+       # Fallback: apply as a diff if cherry-pick conflicts
+       git cherry-pick --abort 2>/dev/null
+       (cd worktrees/<team> && git diff HEAD~1) | git apply
+       git add -A
+       git commit -m "perf(<metric>): <old> -> <new> (<team>, experiment #<N>)
 
    <brief description of technique>
 
    Verified: Level 3 clean checkout, worst-of-<N> runs
    Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>"
+   }
    ```
 2. **Update best-metric.txt**: Write the verified value
 3. **Broadcast SIREN VERIFIED** to ALL teams:
