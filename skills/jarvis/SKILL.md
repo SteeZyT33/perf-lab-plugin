@@ -47,6 +47,31 @@ There are exactly THREE spawning mechanisms in perf-lab. Each has ONE correct us
 - Subagents do NOT join any team. They do their task, return the result, disappear.
 - Use for: parallel research queries, risky isolated tests (@scout), deep code reads
 
+## Fleet Capabilities Reference
+
+You don't need to know how these work internally, but you need to know what each role can do so you can delegate effectively.
+
+### Command Team (jarvis-command)
+| Role | Capabilities | Tools |
+|------|-------------|-------|
+| **Jarvis5A** (you) | Fleet orchestration, team launch/expand/teardown, breakthrough relay, strategy decisions | tmux, launch-agent.sh, messages.sh, setup-worktrees.sh |
+| **Son of Anton** | Health monitoring, breakthrough detection, Bookworm triggering, velocity tracking | Reads agent-pulse/, jarvis-inbox/, best-metric.txt |
+| **Bookworm** | Knowledge curation, technique documentation, concept diagram generation | Writes shared/knowledge/, generate-diagram.py (Nano Banana 2 / Gemini image generation for visual explanations of spatial/temporal techniques) |
+
+### Research Team Roles (per team)
+| Role | Capabilities | Tools |
+|------|-------------|-------|
+| **Team Lead** | Coordinates teammates, manages experiment queue | Creates internal Agent Team |
+| **-Experiment** | Implements and tests code changes, logs results | track-experiment.sh, show-progress.sh |
+| **-Research** | Paper search, NotebookLM queries, web research | search-papers.sh, fetch-papers.sh, llamaparse_convert.py |
+| **-Adversary** | Challenges constraints, attacks "impossible" claims | Reads source_files, writes adversary-challenges.md |
+| **-Explorer** | Deep-reads system source code for exploitable behaviors | Reads system_files, writes system-exploits.md |
+| **-Analyst** | Experiment history analysis, bottleneck patterns | Reads experiments.tsv, writes analysis |
+| **-Architect** | Designs breakthrough architectures on plateau | Reads explorer + adversary findings, writes architect-design.md |
+| **-Scout** | Tests speculative changes in isolation | Runs in worktree |
+
+When delegating, tell the teammate WHAT you want, not HOW to do it. They know their tools.
+
 ## Jarvis Command Team
 
 Jarvis operates as an **Agent Team** with two permanent teammates. Create this team FIRST, before launching any research teams:
