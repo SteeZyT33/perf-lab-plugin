@@ -61,13 +61,38 @@ Style reference (see `/home/taylor/original_performance_takehome/analysis/`):
 - `classroom.ipynb` style: progressive skill tree, analogies, deep explanations
 - `trace_analysis.ipynb` style: practical visualization with "what to look for" guides
 
+### Concept Diagrams (Nano Banana 2)
+
+For techniques involving spatial/temporal patterns (pipeline interleaving, loop tiling, cache blocking, data layout transforms), generate concept diagrams using:
+
+```
+python3 scripts/generate-diagram.py "<prompt>" --alt-text "<caption>"
+```
+
+This outputs a JSON notebook cell with an inline base64 image. Splice it into the notebook's `"cells"` array.
+
+**When to generate:** New technique involves spatial/temporal structure that benefits from visual explanation. NOT for parameter tuning or threshold changes. Max 2 diagrams per update.
+
+**Prompt guidelines:**
+- Be specific about structure: "4 pipeline stages labeled A-D, staggered across 8 time slots, arrows showing data dependencies between stages"
+- Include domain context: "for a VLIW processor with 4 functional units"
+- Request labels and annotations explicitly
+- Request clean technical style with minimal colors
+
+**Placement:** After the textual explanation cell, before code cells. Always pair with a caption that stands alone without the image (accessibility).
+
+**Anti-patterns:**
+- Never replace matplotlib charts (those show real measured data; diagrams explain concepts)
+- Max 500KB base64 per cell. Default `--max-width 768` keeps most diagrams under this. For complex diagrams, use `--max-width 600`
+- If the script fails, continue without the diagram (non-blocking)
+
 ## 5-Step Update Protocol
 
 When triggered:
 
 1. **Cycle count replacement**: If metric value appears in documents, update references (use search-and-replace, preserve historical refs with "was X, now Y")
 2. **Journey narrative extension**: Only if improvement >= 5 cycles OR new technique discovered. Append to chronicle.md
-3. **Technique cells**: If a new technique was used, add to techniques.md with markdown explanation AND code example pair. Every algorithm gets an "In plain English" bridge section
+3. **Technique cells**: If a new technique was used, add to techniques.md with markdown explanation AND code example pair. Every algorithm gets an "In plain English" bridge section. For spatial/temporal techniques, generate a concept diagram (see "Concept Diagrams" section above)
 4. **Frontier/status update**: Update gap-to-target, experiment stats, current binding constraints
 5. **Verification**: Ensure all notebook JSON is valid, no stale metric references, all cross-references still hold
 

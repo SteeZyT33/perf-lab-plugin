@@ -25,7 +25,7 @@ You ──→ Claude ──→ edit code → run tests → log result → repeat
 
 ### Layer 2: Autonomous Iteration (single agent, unattended)
 
-Sweep runs experiments in a loop. Plateau detection triggers breakthrough sequence (explorer → adversary → architect → rewrite) automatically. Research pipeline feeds fresh ideas. Replay retries old experiments after architecture changes — this is where some of the biggest wins come from.
+Sweep runs experiments in a loop. Plateau detection triggers breakthrough sequence (explorer, adversary, architect, rewrite) automatically. Research pipeline feeds fresh ideas. Replay retries old experiments after architecture changes, where some of the biggest wins come from.
 
 **Skills:** `/perf-lab:sweep`, `/perf-lab:plateau`, `/perf-lab:replay`, `/perf-lab:analyze`
 **Agents:** `@explorer`, `@adversary`, `@architect`, `@scout`, `@analyst`
@@ -71,6 +71,8 @@ cd /path/to/your/project
 ```
 
 Requires: `jq`, `git`, `tmux` (for Layer 3).
+
+Optional env vars: `LLAMA_CLOUD_API_KEY` (paper parsing), `SEMANTIC_SCHOLAR_API_KEY` (paper search), `GEMINI_API_KEY` (concept diagram generation).
 
 ## Configure
 
@@ -216,6 +218,8 @@ Bookworm — a teammate in Jarvis's command team — maintains `shared/knowledge
 | `constraints.md` | Readable constraint map: hard (proven impossible), soft (may change), disproven (adversary broke) |
 | `notebooks/*.ipynb` | Jupyter notebooks for visual analysis — trace heatmaps, experiment trends, bottleneck breakdowns |
 
+Bookworm generates concept diagrams for spatial/temporal techniques (pipeline interleaving, cache blocking, loop tiling) using `scripts/generate-diagram.py` and Gemini 2.5 Flash image generation. Diagrams are embedded as inline base64 in notebook markdown cells. Requires `GEMINI_API_KEY` env var.
+
 Style reference: see `analysis/classroom.ipynb` (progressive skill tree with analogies) and `analysis/trace_analysis.ipynb` (practical visualization with "what to look for" guides).
 
 ## Plateau Breaking
@@ -249,6 +253,64 @@ There are exactly three ways to create new agents. Each has one correct use.
 **Analogy**: tmux = open a new office, Agent Team = hire coworkers, Subagent = ask someone a quick question.
 
 ## Architecture
+
+```mermaid
+graph TB
+    subgraph "Layer 3: Fleet Orchestration"
+        J[Jarvis5A<br/>Fleet Orchestrator]
+        SoA[Son of Anton<br/>Monitoring]
+        BW[Bookworm<br/>Knowledge Curator]
+
+        J --- SoA
+        J --- BW
+
+        subgraph "Team Alpha (tmux + worktree)"
+            AL[Alpha Lead]
+            AE[Alpha-Experiment]
+            AR[Alpha-Research]
+            AA[Alpha-Adversary]
+            AL --- AE
+            AL --- AR
+            AL --- AA
+        end
+
+        subgraph "Team Beta (tmux + worktree)"
+            BL[Beta Lead]
+            BE[Beta-Experiment]
+            BR[Beta-Research]
+            BA[Beta-Adversary]
+            BL --- BE
+            BL --- BR
+            BL --- BA
+        end
+
+        J -->|launch + monitor| AL
+        J -->|launch + monitor| BL
+        SoA -->|pulse check| AL
+        SoA -->|pulse check| BL
+        BW -->|reads| shared
+    end
+
+    subgraph "Layer 2: Breakthrough Pipeline"
+        EX[Explorer<br/>System deep-read]
+        AD[Adversary<br/>Challenge constraints]
+        AC[Architect<br/>New approaches]
+        SC[Scout<br/>Isolated tests]
+        AN[Analyst<br/>Pattern analysis]
+        EX --> AC
+        AD --> AC
+    end
+
+    subgraph "Layer 1: Experiment Discipline"
+        shared[shared/<br/>experiments.tsv<br/>best-metric.txt<br/>learned-constraints.md]
+        scripts[Scripts<br/>track-experiment.sh<br/>show-progress.sh<br/>son-of-anton.sh]
+    end
+
+    AL -->|experiments| shared
+    BL -->|experiments| shared
+    AC -->|rewrite| shared
+    scripts -->|read/write| shared
+```
 
 ### Shared State
 

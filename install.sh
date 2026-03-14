@@ -22,6 +22,13 @@ if ! python3 -c "import llama_parse" 2>/dev/null; then
         echo "  Warning: Could not install llama-parse. Paper parsing will be unavailable."
 fi
 
+if ! python3 -c "from google import genai" 2>/dev/null; then
+    echo "Installing google-genai for diagram generation..."
+    pip install google-genai --break-system-packages --quiet 2>/dev/null || \
+        pip install google-genai --quiet 2>/dev/null || \
+        echo "  Warning: Could not install google-genai. Diagram generation will be unavailable."
+fi
+
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
@@ -108,6 +115,9 @@ fi
 if [[ -z "${SEMANTIC_SCHOLAR_API_KEY:-}" ]]; then
     echo "  Note: SEMANTIC_SCHOLAR_API_KEY not set. Paper search will use free tier (low rate limits)."
     echo "        Get a key at https://www.semanticscholar.org/product/api#api-key-form"
+fi
+if [[ -z "${GEMINI_API_KEY:-}" ]]; then
+    echo "  Note: GEMINI_API_KEY not set. Diagram generation (Nano Banana 2) will be unavailable."
 fi
 
 echo ""
