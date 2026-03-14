@@ -28,8 +28,9 @@ Jarvis will tell you WHAT the problem is. Your job is to figure out WHY and fix 
 3. **Propose fix**: SendMessage to Jarvis with your diagnosis and proposed change. Wait for approval.
 4. **Implement**: Make the change in the plugin repo.
 5. **Test**: Verify syntax (bash -n for scripts, python3 -c for Python, markdown structure for skills/agents).
-6. **Commit and push**: Conventional commit format. The marketplace auto-update will propagate changes.
-7. **Report**: SendMessage to Jarvis with what changed and which file(s) were modified.
+6. **Bump version**: ALWAYS increment the patch version in `.claude-plugin/plugin.json` (e.g., 3.1.0 -> 3.1.1). Also update the version in the marketplace repo at `~/s-taylor-labs/.claude-plugin/marketplace.json` to match. Commit and push BOTH repos. This is mandatory -- auto-update uses version to detect changes.
+7. **Commit and push**: Conventional commit format. Push perf-lab-plugin first, then s-taylor-labs.
+8. **Report**: SendMessage to Jarvis with what changed, which file(s) were modified, and the new version number.
 
 ## Plugin Structure (what you can modify)
 
