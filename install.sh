@@ -32,24 +32,16 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Configure local plugin as a directory-based marketplace for instant updates
-mkdir -p "$TARGET/.claude"
-SETTINGS_FILE="$TARGET/.claude/settings.local.json"
-MARKETPLACE_KEY="perf-lab"
-if [[ -f "$SETTINGS_FILE" ]]; then
-    # Add marketplace entry if not already present
-    if ! jq -e ".extraKnownMarketplaces.\"${MARKETPLACE_KEY}\"" "$SETTINGS_FILE" &>/dev/null; then
-        jq --arg path "$PLUGIN_DIR" '.extraKnownMarketplaces["perf-lab"] = {"source": {"source": "directory", "path": $path}}' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp"
-        mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
-        echo "  Added local plugin marketplace to .claude/settings.local.json"
+# Write plugin_dir to config so launch-agent.sh can pass --plugin-dir to claude
+if [[ -f "$TARGET/perf-lab.config.json" ]]; then
+    if ! jq -e '.plugin_dir' "$TARGET/perf-lab.config.json" &>/dev/null; then
+        jq --arg path "$PLUGIN_DIR" '. + {plugin_dir: $path}' "$TARGET/perf-lab.config.json" > "$TARGET/perf-lab.config.json.tmp"
+        mv "$TARGET/perf-lab.config.json.tmp" "$TARGET/perf-lab.config.json"
+        echo "  Set plugin_dir in perf-lab.config.json → $PLUGIN_DIR"
     else
-        echo "  Local plugin marketplace already in .claude/settings.local.json"
+        echo "  plugin_dir already set in perf-lab.config.json"
     fi
-else
-    jq -n --arg path "$PLUGIN_DIR" '{"extraKnownMarketplaces": {"perf-lab": {"source": {"source": "directory", "path": $path}}}}' > "$SETTINGS_FILE"
-    echo "  Created .claude/settings.local.json with local plugin marketplace"
 fi
-echo "  Run '/plugin install perf-lab@perf-lab' in the target project to activate"
 
 # Scripts
 mkdir -p "$TARGET/scripts"
