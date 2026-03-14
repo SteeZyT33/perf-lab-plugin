@@ -82,5 +82,7 @@ Run `./scripts/show-progress.sh` to verify everything works. If it fails, diagno
 
 Tell the user:
 - What was installed
-- How to start: `/perf-lab:experiment` for single iterations, `/perf-lab:sweep` for autonomous mode
-- How to set up parallel agents: `./scripts/setup-worktrees.sh`
+- **What's next** (present as a progression, not a menu):
+  1. **Start here:** `/perf-lab:experiment` to run your first iteration and verify everything works
+  2. **Go unattended:** `/perf-lab:sweep` to run experiments in a loop with automatic plateau breaking
+  3. **Scale up:** `/perf-lab:jarvis launch 3` to run parallel research teams (requires tmux)
