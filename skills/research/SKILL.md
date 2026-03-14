@@ -77,7 +77,40 @@ If a paper's technique needs deeper reading than the abstract provides:
    ```
    This saves to `shared/Research/papers/<title>.pdf` if open-access is available.
 2. If the project has NotebookLM configured, add the PDF as a source for future queries.
-3. If paywalled, note it in findings as "full text unavailable" and work from the abstract + TLDR.
+3. If direct download fails, use Playwright (see below).
+4. If all methods fail, note it in findings as "paywalled" and work from the abstract + TLDR.
+
+## 7b. Browser-Based Paper Download (Playwright)
+
+When direct curl/fetch fails (403, paywall, JS-rendered sites), use the Playwright MCP tools to download papers through browser automation. This is the primary approach — Chrome integration is NOT available on WSL2.
+
+### When to use
+- `search-papers.sh --pdf` returns 403 or an empty file
+- The paper is behind a JavaScript-rendered download page
+- The publisher requires cookie consent or CAPTCHA before serving the PDF
+
+### Workflow
+
+1. **Navigate** to the paper URL:
+   ```
+   browser_navigate → "<paper_url>"
+   ```
+2. **Snapshot** the page to find the PDF link:
+   ```
+   browser_snapshot → look for download/PDF links
+   ```
+3. **Click** the PDF download link:
+   ```
+   browser_click → "<pdf_link_ref>"
+   ```
+4. **Save** the downloaded PDF to `shared/Research/papers/<title>.pdf`
+5. **Process** the PDF:
+   ```bash
+   ./scripts/process-papers.sh
+   ```
+
+### Fallback
+If Playwright cannot access the paper (hard paywall, institutional login required), log it as "paywalled" in `shared/Research/papers/paywalled.txt` and work from the abstract. Do not spend more than 2 minutes per paper on download attempts.
 
 ## 8. Deep Paper Research Pipeline
 
