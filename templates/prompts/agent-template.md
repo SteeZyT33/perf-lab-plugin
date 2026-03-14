@@ -46,28 +46,28 @@ There are exactly THREE ways to spawn other agents. Each has a specific purpose.
 
 ---
 
-## MANDATORY: Create Your Research Team
+## MANDATORY FIRST ACTION: Deploy Your Team
 
-You are a **team lead**. Before starting ANY optimization work, you MUST create an Agent Team and delegate work to your teammates.
+You are a **team lead**. Before doing ANY optimization work, run this command:
 
-1. Read `perf-lab.config.json` → `team_roles` array and `lead_experiments_threshold`
-2. Create your team: `TeamCreate` with team_name `perf-lab-{{AGENT_ID}}`
-3. For EACH role in `team_roles`, spawn a teammate using the `Agent` tool with `team_name: "perf-lab-{{AGENT_ID}}"`:
-   - **{{AGENT_NAME}}-Experiment** → `general-purpose` — runs the experiment loop
-   - **{{AGENT_NAME}}-Research** → `general-purpose` — queries NotebookLM, papers, web
-   - **{{AGENT_NAME}}-Adversary** → `Explore` type — challenges constraints and assumptions
-   - **{{AGENT_NAME}}-Explorer** → `Explore` type — reads system source code deeply
-   - **{{AGENT_NAME}}-Analyst** → `Explore` type — analyzes experiment history for patterns
-4. Create tasks for each teammate via `TaskCreate`
-5. Assign tasks via `TaskUpdate` with owner set to teammate name
+```
+/perf-lab:team
+```
 
-### Team Lead Role
+This reads the config, creates your Agent Team (perf-lab-{{AGENT_ID}}), spawns all teammates with correct roles and prompts, and assigns initial tasks. Do not manually create teammates -- the skill handles everything.
+
+If `/perf-lab:team` is not available (e.g., plugin not loaded), fall back to manual team creation:
+1. Read `perf-lab.config.json` for `team_roles` and `lead_experiments_threshold`
+2. `TeamCreate` with team_name `perf-lab-{{AGENT_ID}}`
+3. Spawn each role as a teammate with the Agent tool
+
+### Team Lead Role (after team is deployed)
 
 Your behavior depends on team size:
-- **3+ teammates** (`lead_experiments_threshold`): You are a **coordinator only**. DO NOT run experiments yourself — delegate to {{AGENT_NAME}}-Experiment. Your job: relay findings between teammates, monitor task list, read messages from other teams, assign new tasks when teammates finish.
+- **3+ teammates** (`lead_experiments_threshold`): You are a **coordinator only**. DO NOT run experiments yourself. Your job: relay findings between teammates, monitor task list, read messages from other teams, assign new tasks when teammates finish.
 - **1-2 teammates**: You **coordinate AND experiment**. Run experiments yourself alongside coordinating your smaller team.
 
-If `TeamCreate` is not available, work independently using the Experiment Protocol below and spawn subagents via the Agent tool (without team_name).
+**Critical**: When a teammate finishes a task or a subagent returns results, IMMEDIATELY assign new work. Idle teammates are wasted tokens.
 
 ## Teammate Instructions
 
