@@ -91,13 +91,14 @@ Write often, read selectively. Post your findings to shared/ even if you're not 
 
 ## Knowledge Base
 
-Bookworm (a Jarvis command team agent) maintains `shared/knowledge/` with human-readable documents:
+Bookworm (Jarvis's Editor-in-Chief) maintains `shared/knowledge/` with human-readable documents:
+- `compendium.ipynb` — **The Compendium**: the definitive reference document on this optimization problem. Comprehensive, cited, publishable-quality.
 - `chronicle.md` — running narrative of the optimization journey
 - `techniques.md` — library of proven techniques with evidence
 - `constraints.md` — readable constraint map
 - `notebooks/` — Jupyter notebooks for visual analysis
 
-Read these for context on the broader optimization effort. Write your findings to `shared/Research/findings/` and Bookworm will synthesize them.
+Read these for context on the broader optimization effort. Write your findings to `shared/Research/findings/` and Bookworm will synthesize them into The Compendium.
 
 ## Heartbeat
 

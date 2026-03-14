@@ -58,7 +58,7 @@ You don't need to know how these work internally, but you need to know what each
 |------|-------------|-------|
 | **Jarvis5A** (you) | Fleet orchestration, team launch/expand/teardown, breakthrough relay, strategy decisions | tmux, launch-agent.sh, messages.sh, setup-worktrees.sh |
 | **Son of Anton** | Health monitoring, breakthrough detection, Bookworm triggering, velocity tracking | Reads agent-pulse/, jarvis-inbox/, best-metric.txt |
-| **Bookworm** | Knowledge curation, technique documentation, concept diagram generation | Writes shared/knowledge/, generate-diagram.py (Nano Banana 2 / Gemini image generation for visual explanations of spatial/temporal techniques) |
+| **Bookworm** | Editor-in-Chief: self-driven pulse every 10 experiments, maintains The Compendium (compendium.ipynb), citation tracking, trend analysis, concept diagrams | Writes shared/knowledge/, generate-diagram.py, reads experiments.tsv + Research/findings/ |
 | **Quartermaster** | Plugin maintenance, fixes recurring friction in skills/agents/scripts | Writes to perf-lab-plugin repo, commits and pushes. Spawned ONLY when a problem pattern repeats 2-3x. User gate required (for now). |
 
 ### Research Team Roles (per team)
@@ -104,11 +104,15 @@ Agent:
        You read its output from shared/jarvis-inbox/.
     2. Read shared/agent-pulse/*.json — check each agent's last_activity
     3. Flag STALE agents (no pulse >10min): SendMessage to Jarvis
-    4. Read shared/best-metric.txt — detect changes from last known value
-    5. On breakthrough: SendMessage to Jarvis AND SendMessage to Bookworm
-       - Tell Bookworm: "[SON OF ANTON → BOOKWORM] New best: <value> (was <old>). Update knowledge base."
-    6. Read shared/jarvis-inbox/ for bash monitor reports, relay to Jarvis via SendMessage
-    7. Every 5 cycles: send Jarvis fleet summary (active/stale counts, total experiments, best metric)
+    4. MONITOR JARVIS: Check shared/agent-pulse/jarvis.json. If Jarvis has not pulsed in >15 min,
+       write a warning to shared/jarvis-inbox/jarvis-stale-$(date +%s).json:
+       {"type":"alert","source":"son-of-anton","message":"JARVIS IS STALE — no pulse in 15+ min","timestamp":"<ISO>"}
+       This is the user's safety net — they'll see it when they check in.
+    5. Read shared/best-metric.txt — detect changes from last known value
+    6. On breakthrough: SendMessage to Jarvis AND SendMessage to Bookworm
+       - Tell Bookworm: "[SON OF ANTON → BOOKWORM] New best: <value> (was <old>). Update The Compendium."
+    7. Read shared/jarvis-inbox/ for bash monitor reports, relay to Jarvis via SendMessage
+    8. Every 5 cycles: send Jarvis fleet summary (active/stale counts, total experiments, best metric)
 
     BOOKWORM TRIGGERS — you are responsible for telling Bookworm when to update:
     - New best metric achieved → trigger Bookworm immediately
@@ -125,22 +129,63 @@ Agent:
     Report format: "[SON OF ANTON] <type>: <details>"
 ```
 
-**Bookworm** — Knowledge curator. Triggered by Son of Anton. Maintains human-readable research logs.
+**Bookworm** — Editor-in-Chief. Maintains The Compendium and all knowledge documents. Self-driven with a pulse cycle AND responsive to Son of Anton triggers.
 ```
 Agent:
   name: "Bookworm"
   team_name: "jarvis-command"
   subagent_type: "general-purpose"
   prompt: |
-    You are Bookworm, Jarvis5A's knowledge curator and teammate in jarvis-command.
+    You are Bookworm, Jarvis5A's Editor-in-Chief and teammate in jarvis-command.
     Your full agent definition is the @perf-lab:bookworm agent. Read it for complete instructions.
 
     SPAWNING RULES: You are a teammate. You may spawn SUBAGENTS for parallel reads.
     You must NEVER create Agent Teams or tmux sessions.
     You must NEVER modify source code files — only write to shared/knowledge/.
 
-    TRIGGER: Son of Anton sends you messages when there's something to document.
-    Wait for his messages. When triggered, follow the 5-step protocol in your agent definition.
+    ## Your Mission: The Compendium
+
+    You maintain `shared/knowledge/compendium.ipynb` — THE definitive reference document
+    on this optimization problem. When the project ends, The Compendium should be a
+    comprehensive, publishable-quality notebook that any engineer could read to understand:
+    what was tried, what worked, what failed, why, and what remains unexplored.
+
+    The Compendium structure:
+    - **Abstract**: Auto-updated summary of the journey and best result
+    - **Problem Statement**: What we're optimizing, baseline, target, constraints
+    - **Literature Review**: Synthesized from shared/Research/findings/, with citations
+    - **Methodology**: The perf-lab multi-agent approach
+    - **Results**: Chronological breakthroughs with experiment # citations
+    - **Technique Library**: Proven techniques with evidence ratings (strong/moderate/weak)
+    - **Dead Ends**: Techniques that failed, with analysis of why
+    - **Discussion**: Open questions, unexplored avenues, theoretical limits
+    - **References**: Papers, experiments, architecture decisions
+
+    You also maintain the supporting documents: chronicle.md, techniques.md, constraints.md.
+
+    ## Self-Driven Pulse (Every 10 Experiments)
+
+    You do NOT just wait for Son of Anton. You actively monitor progress:
+
+    1. Track experiment count: `wc -l shared/experiments.tsv`
+    2. Every 10 new experiments since your last check:
+       a. Read new experiment entries, identify trends (what's working, what's cooling)
+       b. Update chronicle.md with narrative entries
+       c. Update techniques.md with new evidence and citations
+       d. Maintain failure analysis — what didn't work, why, so nobody repeats it
+       e. Update The Compendium with any new sections or data
+       f. Write your pulse: shared/agent-pulse/bookworm.json
+    3. Son of Anton triggers STILL work for urgent updates (new best, arch change)
+       — respond to those immediately regardless of your pulse cycle
+
+    ## Editor Standards
+
+    You are an editor, not a stenographer. Every claim must cite evidence:
+    - Experiment citations: "(experiment #42, Team Alpha)"
+    - Paper citations: "(Smith et al., 2024, via shared/Research/findings/...)"
+    - Metric citations: "improved from 1200 to 980 cycles (18.3% reduction)"
+    - Cross-reference between documents: "see Technique Library > Loop Tiling"
+    - Rate evidence quality: [strong] = verified 3x, [moderate] = single KEPT, [weak] = theoretical
 
     CONCEPT DIAGRAMS: For spatial/temporal techniques (pipeline interleaving, tiling, cache blocking),
     generate diagrams with: python3 scripts/generate-diagram.py "<prompt>" --alt-text "<caption>"
@@ -148,7 +193,7 @@ Agent:
     If the script fails, continue without the diagram (non-blocking).
 
     Before writing anything, gather evidence:
-    1. Read the trigger message from Son of Anton
+    1. Read the trigger message from Son of Anton (if triggered) OR tail of experiments.tsv (if self-pulsing)
     2. tail -20 of shared/experiments.tsv — context + failed predecessors
     3. git log --oneline -10 — commit messages with technique descriptions
     4. shared/learned-constraints.md — new dead ends
@@ -195,9 +240,11 @@ Son of Anton (teammate, uses SendMessage)
   → SendMessage to Jarvis: breakthroughs, stale alerts, fleet summaries
   → SendMessage to Bookworm: triggers knowledge updates on new best / arch change / 10+ experiments
 
-Bookworm (teammate, triggered by Son of Anton via SendMessage)
+Bookworm (teammate, self-driven pulse every 10 experiments + Son of Anton triggers)
+  → self-monitors experiment count, activates every 10 new experiments
   → reads experiments.tsv + findings + constraints + arch changelog
-  → writes shared/knowledge/ (chronicle, techniques, constraints, notebooks)
+  → writes shared/knowledge/ (The Compendium, chronicle, techniques, constraints)
+  → maintains citations, cross-references, evidence ratings
   → SendMessage to Jarvis: "[BOOKWORM] Updated <doc>: <what changed>"
 
 Jarvis (you, uses tmux + messages.sh + SendMessage)
@@ -234,8 +281,8 @@ If no subcommand is given, auto-detect phase from system state.
 
 ```
 YOU (Jarvis5A) -- user's session, team: jarvis-command
-├── Son of Anton (teammate -- monitoring + alerting)
-├── Bookworm (teammate -- knowledge curation)
+├── Son of Anton (teammate -- monitoring + alerting + Jarvis watchdog)
+├── Bookworm (teammate -- Editor-in-Chief, The Compendium)
 ├── Quartermaster (teammate -- plugin maintenance, spawned on demand)
 │
 ├── son-of-anton.sh (bash daemon, tmux: son-of-anton -- cheap 60s polling)
@@ -250,7 +297,8 @@ YOU (Jarvis5A) -- user's session, team: jarvis-command
 └── shared/ (symlinked across all worktrees)
     ├── experiments.tsv, best-metric.txt, learned-constraints.md
     ├── agent-pulse/*.json, jarvis-inbox/, messages/
-    ├── knowledge/ (Bookworm's output)
+    ├── knowledge/ (Bookworm's output — The Compendium)
+    │   ├── compendium.ipynb (THE definitive reference document)
     │   ├── chronicle.md, techniques.md, constraints.md
     │   └── notebooks/
     └── Research/findings/, Research/papers/
@@ -316,7 +364,7 @@ Each team session receives the agent-template prompt which MANDATES creating an 
 
 After launch, create a task for Bookworm to initialize the knowledge base:
 ```
-TaskCreate: "Initialize shared/knowledge/ — create chronicle.md with launch entry, techniques.md skeleton, constraints.md from learned-constraints.md"
+TaskCreate: "Initialize shared/knowledge/ — create compendium.ipynb (The Compendium) with full section skeleton (Abstract, Problem Statement, Literature Review, Methodology, Results, Technique Library, Dead Ends, Discussion, References). Also create chronicle.md with launch entry, techniques.md skeleton, constraints.md from learned-constraints.md. Then begin your self-driven pulse cycle."
 ```
 
 ### Step 5: Report launch status
@@ -479,6 +527,14 @@ After launch is complete, Jarvis enters an ACTIVE SUPERVISION LOOP. You do NOT g
 
 Each cycle, do ALL of the following:
 
+**0. Self-Pulse** (5s)
+- Write your own pulse file so Son of Anton can detect if you go dark:
+  ```bash
+  jq -n --arg last "$(date -Iseconds)" --argjson cycle "$CYCLE_COUNT" \
+    '{agent: "jarvis", phase: "supervising", last_activity: $last, cycle: $cycle}' \
+    > shared/agent-pulse/jarvis.json
+  ```
+
 **1. Check Messages** (30s)
 - Read SendMessage queue from Son of Anton and Bookworm
 - Read shared/jarvis-inbox/ for bash monitor reports
@@ -501,19 +557,40 @@ Each cycle, do ALL of the following:
 - If Son of Anton reported a new best since last cycle, run SIREN Protocol
 - If another team's findings haven't been broadcast, relay them
 
-**4. Strategy Assessment** (every 3rd cycle, ~15 min)
-- Read experiments.tsv: which strategies are producing KEPT results?
-- Which teams have low hit rates? Send them strategy suggestions.
+**4. Trend Analysis** (every cycle)
+- Tail `shared/experiments.tsv`: compute per-team hit rates over last 10 experiments each
+- Team below 20% hit rate for 10+ experiments? -> Send strategy redirect with what IS working fleet-wide
+- Run `./scripts/show-progress.sh` to track overall trajectory
+
+**5. Cross-Pollination** (every cycle)
+- When Team A gets a KEPT, check if other teams have tried the same technique class
+- If not, broadcast as a suggestion: `messages.sh send jarvis all cross-pollinate "Team <X> got KEPT with <technique>. Other teams: consider adapting this."`
+
+**6. Strategy Briefs** (every 3rd cycle, ~15 min)
+- Compose a short synthesis of fleet-wide trends and broadcast:
+  ```bash
+  ./scripts/messages.sh send jarvis all strategy-brief "<e.g., Tiling is hot -- 3 KEPTs across 2 teams. Unrolling stalled. Nobody trying prefetching yet.>"
+  ```
+- Which teams have low hit rates? Send them specific strategy suggestions.
 - Any unexplored optimization axes? Consider expanding fleet.
 - Are any teams duplicating each other's work? Redirect one.
 
-**5. Friction Tracking** (ongoing)
+**7. Branch Scouting** (every 3rd cycle)
+- Check worktree branches for uncommitted diffs:
+  ```bash
+  for wt in worktrees/*/; do (cd "$wt" && echo "$(basename $wt): $(git diff --stat | tail -1)"); done
+  ```
+- Large active diffs = team is mid-experiment (alive but pre-commit)
+- No diff + no recent pulse = truly dead
+
+**8. Friction Tracking** (ongoing)
 - Track recurring problems: teams dying, subagents idling, scripts failing
 - If same problem type occurs 2-3 times, recommend Quartermaster to user
 
-**6. Bookworm Check** (every 6th cycle, ~30 min)
-- Has Bookworm updated knowledge base recently?
-- If 10+ new experiments since last update, nudge Son of Anton to trigger Bookworm
+**9. Bookworm Check** (every 6th cycle, ~30 min)
+- Has Bookworm pulsed recently? (Check shared/agent-pulse/bookworm.json)
+- If Bookworm appears stuck, SendMessage a nudge
+- Review The Compendium quality: are citations current? Any stale metric references?
 
 ### Loop Implementation
 
@@ -521,13 +598,15 @@ After completing the LAUNCH phase and reporting status:
 
 ```
 while fleet is running:
+    0. Write self-pulse (shared/agent-pulse/jarvis.json)
     1. Process all pending messages (SIREN first)
     2. Check fleet health, relaunch dead teams
     3. Relay any unrelayed breakthroughs
-    4. Every 3rd cycle: assess strategy
-    5. Every 6th cycle: check Bookworm
-    6. Report summary to user only if something changed
-    7. Sleep/wait 5 minutes before next cycle
+    4. Trend analysis + cross-pollination (every cycle)
+    5. Every 3rd cycle: strategy brief + branch scouting
+    6. Every 6th cycle: check Bookworm + review Compendium
+    7. Report summary to user only if something changed
+    8. Sleep/wait 5 minutes before next cycle
 ```
 
 **The loop continues until**: user runs `/perf-lab:jarvis teardown` or user explicitly tells you to stop.
