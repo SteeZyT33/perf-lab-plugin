@@ -38,7 +38,7 @@ Don't wait for the sub-agent to finish. Start your next experiment. Read the sub
 
 ## Housekeeping (between experiments, not instead of them)
 
-**Every 5th iteration** — update `shared/agent-state/<agent>.md`:
+**Every 5th iteration** — update `shared/agent-pulse/<agent>.md`:
 ```markdown
 # Agent: <name>
 ## Last Updated: <timestamp>

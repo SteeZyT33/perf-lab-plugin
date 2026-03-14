@@ -10,7 +10,7 @@ Guide the user through configuring perf-lab for their project. Inspect the codeb
 ## Step 1: Locate the plugin
 
 Find the perf-lab-plugin install.sh. Check these locations in order:
-1. `~/perf-lab-plugin/install.sh`
+1. The plugin's `install.sh` (find via: `find ~/.claude/plugins -name install.sh -path '*/perf-lab*' 2>/dev/null || echo ~/perf-lab-plugin/install.sh`)
 2. Any path the user provided
 3. Ask if not found
 

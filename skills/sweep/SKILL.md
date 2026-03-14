@@ -10,7 +10,7 @@ Launch an autonomous optimization loop. The experiment skill has built-in platea
 ## Startup
 
 1. Read `perf-lab.config.json` for `max_total_iterations` (default: 200), `target`
-2. **Resume check**: if `shared/agent-state/<agent>.md` exists, read it to restore context (strategy, learnings, next planned experiment) instead of starting fresh
+2. **Resume check**: if `shared/agent-pulse/<agent>.md` exists, read it to restore context (strategy, learnings, next planned experiment) instead of starting fresh
 3. Run `./scripts/show-progress.sh` for current state
 4. Reset `shared/breakthrough-count.txt` to 0
 5. Start the ralph loop:

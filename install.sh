@@ -44,7 +44,7 @@ chmod +x "$TARGET/scripts/"*.sh
 echo "  Copied scripts → scripts/ (chmod +x)"
 
 # Shared directory
-mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-state" "$TARGET/shared/agent-pulse" "$TARGET/shared/jarvis-inbox" "$TARGET/shared/knowledge/notebooks"
+mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-pulse" "$TARGET/shared/jarvis-inbox" "$TARGET/shared/knowledge/notebooks"
 if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     CONFIG="$TARGET/perf-lab.config.json"
     if [[ -f "$CONFIG" ]]; then

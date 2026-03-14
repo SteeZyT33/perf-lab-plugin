@@ -221,7 +221,7 @@ Agent:
     Jarvis has identified a recurring problem. Diagnose it, propose a fix via SendMessage
     to Jarvis, wait for approval, then implement, commit, and push to the plugin remote.
 
-    The plugin repo is at: ~/perf-lab-plugin (or find it via: find ~ -name ".claude-plugin" -path "*/perf-lab*" 2>/dev/null)
+    The plugin repo is at: find ~/.claude/plugins -name ".claude-plugin" -path "*/perf-lab*" 2>/dev/null (fallback: ~/perf-lab-plugin)
 
     After fixing: SendMessage to Jarvis: "[QUARTERMASTER] Fixed <issue>: <what changed in which file>"
 ```

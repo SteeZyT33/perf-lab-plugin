@@ -19,44 +19,17 @@ User can specify count: `/perf-lab:swarm 5` to launch 5 teams. Default: 3.
 
 ## Quick Launch
 
-The swarm skill is a shortcut. When invoked:
+The swarm skill is a thin wrapper. When invoked, it delegates entirely to `/perf-lab:jarvis launch [N]`.
 
-### Step 0: Launch Son of Anton
+**Do NOT duplicate Jarvis logic here.** Invoke the Jarvis skill directly:
 
-```bash
-if ! tmux has-session -t son-of-anton 2>/dev/null; then
-    tmux new-session -d -s son-of-anton -c "$(pwd)" "./scripts/son-of-anton.sh"
-    echo "Son of Anton launched (tmux: son-of-anton)"
-fi
+```
+/perf-lab:jarvis launch [N]
 ```
 
-### Step 1: Read config and determine team count
+Where N is the team count from arguments (default: `team_count` from config).
 
-1. Read `perf-lab.config.json` for metric, targets, `team_roles`, `team_count`
-2. Parse team count from arguments if provided (overrides config)
-3. Run `./scripts/show-progress.sh` if experiments.tsv exists
-4. `mkdir -p shared/agent-pulse shared/jarvis-inbox`
-
-### Step 2: Setup worktrees and launch teams
-
-Greek alphabet order: alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lambda, mu, nu, xi, omicron, pi, rho, sigma, tau, upsilon, phi, chi, psi, omega
-
-For each team (up to the requested count):
-
-```bash
-./scripts/setup-worktrees.sh   # idempotent — creates what's missing
-./scripts/launch-agent.sh alpha
-./scripts/launch-agent.sh beta
-./scripts/launch-agent.sh gamma
-# ... etc
-```
-
-Each team's tmux session receives the agent-template prompt which **mandates** creating an internal Agent Team with roles from `team_roles` config.
-
-### Step 3: Report launch status
-
-Report what was launched — team names, tmux session names, team roles.
-Remind user: "Run `/perf-lab:jarvis` for fleet status and orchestration."
+Jarvis handles everything: command team creation, Son of Anton launch, worktree setup, team launches, and Bookworm initialization.
 
 ## Team Structure (per session)
 
