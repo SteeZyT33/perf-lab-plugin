@@ -32,10 +32,22 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Skills and agents are loaded by the plugin system (perf-lab@s-taylor-labs).
-# No need to copy them — they're namespaced as /perf-lab:* and @perf-lab:* automatically.
-# To install the plugin: /plugin marketplace add SteeZyT33/s-taylor-labs
-#                        /plugin install perf-lab@s-taylor-labs
+# Configure local plugin reference for instant updates (no marketplace needed)
+mkdir -p "$TARGET/.claude"
+SETTINGS_FILE="$TARGET/.claude/settings.json"
+if [[ -f "$SETTINGS_FILE" ]]; then
+    # Add plugin path if not already present
+    if ! jq -e ".plugins[]? | select(.path == \"$PLUGIN_DIR\")" "$SETTINGS_FILE" &>/dev/null; then
+        jq --arg path "$PLUGIN_DIR" '.plugins = ((.plugins // []) + [{"path": $path}])' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp"
+        mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
+        echo "  Added local plugin reference to .claude/settings.json"
+    else
+        echo "  Local plugin reference already in .claude/settings.json"
+    fi
+else
+    jq -n --arg path "$PLUGIN_DIR" '{"plugins": [{"path": $path}]}' > "$SETTINGS_FILE"
+    echo "  Created .claude/settings.json with local plugin reference"
+fi
 
 # Scripts
 mkdir -p "$TARGET/scripts"
@@ -44,7 +56,7 @@ chmod +x "$TARGET/scripts/"*.sh
 echo "  Copied scripts → scripts/ (chmod +x)"
 
 # Shared directory
-mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-pulse" "$TARGET/shared/jarvis-inbox" "$TARGET/shared/knowledge/notebooks"
+mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-pulse" "$TARGET/shared/agent-journal" "$TARGET/shared/jarvis-inbox" "$TARGET/shared/knowledge/notebooks"
 if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     CONFIG="$TARGET/perf-lab.config.json"
     if [[ -f "$CONFIG" ]]; then
@@ -52,9 +64,12 @@ if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     else
         METRIC="metric"
     fi
-    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC}_before\t${METRIC}_after\tstatus\tnotes\tduration_seconds" > "$TARGET/shared/experiments.tsv"
+    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC}_before\t${METRIC}_after\tstatus\tnotes\tduration_seconds\ttechnique" > "$TARGET/shared/experiments.tsv"
 fi
-echo "  Created shared/ with experiments.tsv"
+if [[ ! -f "$TARGET/shared/technique-index.tsv" ]]; then
+    echo -e "technique\tattempts\tkept\tdiscarded\tfailed\tbest_result\tlast_agent\tlast_updated" > "$TARGET/shared/technique-index.tsv"
+fi
+echo "  Created shared/ with experiments.tsv and technique-index.tsv"
 
 # Learned constraints
 if [[ ! -f "$TARGET/shared/learned-constraints.md" ]]; then
@@ -114,7 +129,9 @@ if [[ -z "${GEMINI_API_KEY:-}" ]]; then
 fi
 
 echo ""
-echo "Done! Next steps:"
+echo "Done! Plugin installed via local reference (instant updates, no marketplace)."
+echo ""
+echo "Next steps:"
 echo "  1. Edit perf-lab.config.json with your metric, test command, and targets"
 echo "  2. Edit prompts/*.md with agent-specific strategies"
 echo "  3. Run /perf-lab:jarvis to launch research teams (Jarvis5A orchestrator)"

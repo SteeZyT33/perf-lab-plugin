@@ -1,4 +1,4 @@
-# perf-lab-plugin v3
+# perf-lab-plugin v4
 
 Autonomous multi-agent performance optimization plugin for Claude Code. Turns any "optimize metric X" problem into a coordinated fleet of research teams that run experiments, share findings, and build institutional memory.
 
@@ -50,6 +50,8 @@ Jarvis5A (user's session — Agent Team: jarvis-command)
 └── shared/ (symlinked across all worktrees)
     ├── experiments.tsv, best-metric.txt, learned-constraints.md
     ├── agent-pulse/*.json (heartbeats)
+    ├── agent-journal/*.md (per-agent memory for relaunch context)
+    ├── technique-index.tsv (fleet-wide technique lookup)
     ├── jarvis-inbox/ (bash monitor → Jarvis)
     ├── messages/ (cross-team broadcasts)
     ├── knowledge/ (Bookworm's output — The Compendium)
@@ -70,6 +72,8 @@ Users start with Layer 1. Add Layer 2 when they want overnight runs. Add Layer 3
 cd /path/to/your/project
 /path/to/perf-lab-plugin/install.sh .
 ```
+
+This configures a **local plugin reference** in your project's `.claude/settings.json`, pointing directly at the perf-lab-plugin directory. Every file save in the plugin repo is immediately live — no marketplace publishing or cache invalidation needed.
 
 Requires: `jq`, `git`, `tmux` (for Layer 3).
 
@@ -316,6 +320,8 @@ graph LR
 | `shared/learned-constraints.md` | Raw constraints (auto-extracted from DISCARDED experiments) |
 | `shared/architecture-changelog.md` | Architecture evolution log (appended on rewrite) |
 | `shared/agent-pulse/` | Per-agent heartbeat JSON files |
+| `shared/agent-journal/` | Per-agent memory files for relaunch context persistence |
+| `shared/technique-index.tsv` | Fleet-wide technique lookup (attempts, kept, discarded, best result) |
 | `shared/jarvis-inbox/` | Son of Anton bash daemon reports |
 | `shared/messages/` | Cross-team broadcasts (new-best, breakthrough-relay, stale-agent) |
 | `shared/knowledge/` | Bookworm's output: The Compendium (compendium.ipynb), chronicle, techniques, constraints |
