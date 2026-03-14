@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # track-experiment.sh — Log an experiment result to shared/experiments.tsv
 #
-# Usage: ./scripts/track-experiment.sh <agent> "<hypothesis>" <KEPT|DISCARDED|FAILED|EXPLORING> ["notes"]
+# Usage: ./scripts/track-experiment.sh <agent> "<hypothesis>" <KEPT|DISCARDED|FAILED|EXPLORING> ["notes"] ["technique"]
 
 set -euo pipefail
 
@@ -30,11 +30,11 @@ is_better() { # $1=new $2=old
 }
 
 if [[ $# -lt 3 ]]; then
-    echo "Usage: $0 <agent> <hypothesis> <KEPT|DISCARDED|FAILED|EXPLORING> [notes]"
+    echo "Usage: $0 <agent> <hypothesis> <KEPT|DISCARDED|FAILED|EXPLORING> [notes] [technique]"
     exit 1
 fi
 
-AGENT="$1"; HYPOTHESIS="$2"; STATUS="$3"; NOTES="${4:-}"
+AGENT="$1"; HYPOTHESIS="$2"; STATUS="$3"; NOTES="${4:-}"; TECHNIQUE="${5:-}"
 
 if [[ "$STATUS" != "KEPT" && "$STATUS" != "DISCARDED" && "$STATUS" != "FAILED" && "$STATUS" != "EXPLORING" ]]; then
     echo "Error: status must be KEPT, DISCARDED, FAILED, or EXPLORING (got: $STATUS)"
@@ -42,7 +42,7 @@ if [[ "$STATUS" != "KEPT" && "$STATUS" != "DISCARDED" && "$STATUS" != "FAILED" &
 fi
 
 if [[ ! -f "$TSV" ]]; then
-    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC_NAME}_before\t${METRIC_NAME}_after\tstatus\tnotes\tduration_seconds" > "$TSV"
+    echo -e "timestamp\tagent\titeration\thypothesis\t${METRIC_NAME}_before\t${METRIC_NAME}_after\tstatus\tnotes\tduration_seconds\ttechnique" > "$TSV"
 fi
 
 METRIC_BEFORE="-"
@@ -129,7 +129,7 @@ fi
     flock -x 200
     LAST_ITER=$(tail -n 1 "$TSV" | cut -f3)
     if [[ "$LAST_ITER" == "iteration" || -z "$LAST_ITER" ]]; then ITER=1; else ITER=$((LAST_ITER + 1)); fi
-    echo -e "${TIMESTAMP}\t${AGENT}\t${ITER}\t${HYPOTHESIS}\t${METRIC_BEFORE}\t${METRIC_AFTER}\t${STATUS}\t${NOTES}\t${DURATION}" >> "$TSV"
+    echo -e "${TIMESTAMP}\t${AGENT}\t${ITER}\t${HYPOTHESIS}\t${METRIC_BEFORE}\t${METRIC_AFTER}\t${STATUS}\t${NOTES}\t${DURATION}\t${TECHNIQUE}" >> "$TSV"
 ) 200>"$TSV.lock"
 
 # Read back the iteration number we just wrote
@@ -173,6 +173,65 @@ if [[ "$CURRENT_BRANCH" == perf-lab/* ]]; then
             git reset --hard HEAD 2>/dev/null
         ) || echo "Warning: git reset failed for DISCARDED experiment (non-fatal)"
     fi
+fi
+
+# Agent Journal: auto-write recent experiments for relaunch context
+JOURNAL_DIR="$SHARED_DIR/agent-journal"
+mkdir -p "$JOURNAL_DIR"
+JOURNAL="$JOURNAL_DIR/${AGENT}.md"
+
+# Write/update recent experiments table (keep last 10 by this agent)
+RECENT=$(awk -F'\t' -v a="$AGENT" '$2==a && $1!="timestamp" {print "| " $4 " | " $7 " | " $6 " | " $10 " |"}' "$TSV" | tail -10)
+# Write factual section (agent writes strategy sections manually)
+cat > "${JOURNAL}.tmp" <<JEOF
+# Journal: ${AGENT}
+## Last Updated: $(date -Iseconds)
+## Current Best: $(cat "$BEST_FILE" 2>/dev/null || echo "none")
+
+## Recent Experiments (auto-generated, last 10)
+| Hypothesis | Status | Metric | Technique |
+|---|---|---|---|
+${RECENT}
+
+JEOF
+
+# Preserve agent-written sections if they exist
+if [[ -f "$JOURNAL" ]]; then
+    sed -n '/^## Strategy$/,$ p' "$JOURNAL" >> "${JOURNAL}.tmp" 2>/dev/null || true
+fi
+mv "${JOURNAL}.tmp" "$JOURNAL"
+
+# Technique Index: update fleet-wide technique lookup
+if [[ -n "$TECHNIQUE" ]]; then
+    TECH_INDEX="$SHARED_DIR/technique-index.tsv"
+    if [[ ! -f "$TECH_INDEX" ]]; then
+        echo -e "technique\tattempts\tkept\tdiscarded\tfailed\tbest_result\tlast_agent\tlast_updated" > "$TECH_INDEX"
+    fi
+    (
+        flock -x 201
+        if grep -q "^${TECHNIQUE}	" "$TECH_INDEX"; then
+            # Update existing row
+            awk -F'\t' -v OFS='\t' -v tech="$TECHNIQUE" -v st="$STATUS" -v val="$METRIC_AFTER" \
+                -v agent="$AGENT" -v ts="$TIMESTAMP" -v dir="$DIRECTION" '
+                $1==tech {
+                    $2++
+                    if(st=="KEPT") { $3++; if($6=="-" || (dir=="lower" && val<$6) || (dir!="lower" && val>$6)) $6=val }
+                    else if(st=="DISCARDED") $4++
+                    else if(st=="FAILED") $5++
+                    $7=agent; $8=ts
+                }
+                {print}
+            ' "$TECH_INDEX" > "${TECH_INDEX}.tmp"
+            mv "${TECH_INDEX}.tmp" "$TECH_INDEX"
+        else
+            # New technique row
+            KEPT_N=0; DISC_N=0; FAIL_N=0; BEST="-"
+            [[ "$STATUS" == "KEPT" ]] && KEPT_N=1 && BEST="$METRIC_AFTER"
+            [[ "$STATUS" == "DISCARDED" ]] && DISC_N=1
+            [[ "$STATUS" == "FAILED" ]] && FAIL_N=1
+            echo -e "${TECHNIQUE}\t1\t${KEPT_N}\t${DISC_N}\t${FAIL_N}\t${BEST}\t${AGENT}\t${TIMESTAMP}" >> "$TECH_INDEX"
+        fi
+    ) 201>"${TECH_INDEX}.lock"
 fi
 
 # Bootstrap: first KEPT experiment establishes the baseline best

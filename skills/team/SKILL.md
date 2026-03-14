@@ -51,7 +51,9 @@ Agent:
     - Communicate with your team lead (<TEAM_NAME>) via SendMessage
     - You may spawn SUBAGENTS for isolated tests (@scout) or quick research
     - You must NEVER create Agent Teams or tmux sessions
-    - Log every experiment: ./scripts/track-experiment.sh <AGENT_ID> "<hypothesis>" <status>
+    - Log every experiment: ./scripts/track-experiment.sh <AGENT_ID> "<hypothesis>" <status> ["notes"] ["technique"]
+    - Always pass a technique name (5th arg): prefetching, loop-tiling, alignment, vectorization, etc.
+    - Check shared/technique-index.tsv before picking a hypothesis — skip dead ends (3+ attempts, 0 KEPT)
     - If you find a potential new best, IMMEDIATELY return the result to your team lead
       so they can write the SIREN file. Do NOT write SIREN files yourself.
 
