@@ -32,22 +32,24 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Configure local plugin reference for instant updates (no marketplace needed)
+# Configure local plugin as a directory-based marketplace for instant updates
 mkdir -p "$TARGET/.claude"
-SETTINGS_FILE="$TARGET/.claude/settings.json"
+SETTINGS_FILE="$TARGET/.claude/settings.local.json"
+MARKETPLACE_KEY="perf-lab"
 if [[ -f "$SETTINGS_FILE" ]]; then
-    # Add plugin path if not already present
-    if ! jq -e ".plugins[]? | select(.path == \"$PLUGIN_DIR\")" "$SETTINGS_FILE" &>/dev/null; then
-        jq --arg path "$PLUGIN_DIR" '.plugins = ((.plugins // []) + [{"path": $path}])' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp"
+    # Add marketplace entry if not already present
+    if ! jq -e ".extraKnownMarketplaces.\"${MARKETPLACE_KEY}\"" "$SETTINGS_FILE" &>/dev/null; then
+        jq --arg path "$PLUGIN_DIR" '.extraKnownMarketplaces["perf-lab"] = {"source": {"source": "directory", "path": $path}}' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp"
         mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
-        echo "  Added local plugin reference to .claude/settings.json"
+        echo "  Added local plugin marketplace to .claude/settings.local.json"
     else
-        echo "  Local plugin reference already in .claude/settings.json"
+        echo "  Local plugin marketplace already in .claude/settings.local.json"
     fi
 else
-    jq -n --arg path "$PLUGIN_DIR" '{"plugins": [{"path": $path}]}' > "$SETTINGS_FILE"
-    echo "  Created .claude/settings.json with local plugin reference"
+    jq -n --arg path "$PLUGIN_DIR" '{"extraKnownMarketplaces": {"perf-lab": {"source": {"source": "directory", "path": $path}}}}' > "$SETTINGS_FILE"
+    echo "  Created .claude/settings.local.json with local plugin marketplace"
 fi
+echo "  Run '/plugin install perf-lab@perf-lab' in the target project to activate"
 
 # Scripts
 mkdir -p "$TARGET/scripts"

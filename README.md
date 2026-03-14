@@ -73,7 +73,7 @@ cd /path/to/your/project
 /path/to/perf-lab-plugin/install.sh .
 ```
 
-This configures a **local plugin reference** in your project's `.claude/settings.json`, pointing directly at the perf-lab-plugin directory. Every file save in the plugin repo is immediately live — no marketplace publishing or cache invalidation needed.
+This registers the plugin as a local directory-based marketplace in `.claude/settings.local.json`. After running install.sh, activate with `/plugin install perf-lab@perf-lab` in the target project. Every file save in the plugin repo is immediately live — run `/reload-plugins` to pick up changes. For quick testing without installing, use `claude --plugin-dir /path/to/perf-lab-plugin`.
 
 Requires: `jq`, `git`, `tmux` (for Layer 3).
 
