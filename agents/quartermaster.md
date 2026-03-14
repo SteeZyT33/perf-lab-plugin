@@ -28,7 +28,11 @@ Jarvis will tell you WHAT the problem is. Your job is to figure out WHY and fix 
 3. **Propose fix**: SendMessage to Jarvis with your diagnosis and proposed change. Wait for approval.
 4. **Implement**: Make the change in the plugin repo.
 5. **Test**: Verify syntax (bash -n for scripts, python3 -c for Python, markdown structure for skills/agents).
-6. **Bump version**: ALWAYS increment the patch version in `.claude-plugin/plugin.json` (e.g., 3.1.0 -> 3.1.1). Also update the version in the marketplace repo at `~/s-taylor-labs/.claude-plugin/marketplace.json` to match. Commit and push BOTH repos. This is mandatory -- auto-update uses version to detect changes.
+6. **Bump version**: ALWAYS update the version in `.claude-plugin/plugin.json` AND in `~/s-taylor-labs/.claude-plugin/marketplace.json` to match. Commit and push BOTH repos. This is mandatory -- auto-update uses version to detect changes.
+   - **Patch** (x.y.Z+1): Bug fixes, small tweaks, typo corrections, path fixes
+   - **Minor** (x.Y+1.0): New skill, new agent, new feature, new protocol
+   - **Major** (X+1.0.0): Breaking architecture changes (reserved for user/Jarvis decision)
+   Quartermaster fixes are almost always **patch** bumps. If you're adding a new skill or agent to fix the friction, that's a **minor** bump. Never bump major without explicit approval.
 7. **Commit and push**: Conventional commit format. Push perf-lab-plugin first, then s-taylor-labs.
 8. **Report**: SendMessage to Jarvis with what changed, which file(s) were modified, and the new version number.
 
