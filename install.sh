@@ -32,17 +32,10 @@ fi
 echo "Installing perf-lab-plugin into: $TARGET"
 echo ""
 
-# Skills (merge into existing directory; remove placeholder file if present)
-[[ -f "$TARGET/.claude/skills" ]] && rm "$TARGET/.claude/skills"
-mkdir -p "$TARGET/.claude/skills"
-cp -a "$PLUGIN_DIR/skills/." "$TARGET/.claude/skills/"
-echo "  Copied skills → .claude/skills/"
-
-# Agents
-[[ -f "$TARGET/.claude/agents" ]] && rm "$TARGET/.claude/agents"
-mkdir -p "$TARGET/.claude/agents"
-cp -a "$PLUGIN_DIR/agents/." "$TARGET/.claude/agents/"
-echo "  Copied agents → .claude/agents/"
+# Skills and agents are loaded by the plugin system (perf-lab@s-taylor-labs).
+# No need to copy them — they're namespaced as /perf-lab:* and @perf-lab:* automatically.
+# To install the plugin: /plugin marketplace add SteeZyT33/s-taylor-labs
+#                        /plugin install perf-lab@s-taylor-labs
 
 # Scripts
 mkdir -p "$TARGET/scripts"
