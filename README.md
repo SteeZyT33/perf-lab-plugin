@@ -36,8 +36,8 @@ Jarvis5A orchestrates multiple research teams from the user's session. Each team
 
 ```
 Jarvis5A (user's session — Agent Team: jarvis-command)
-├── Son of Anton (teammate — monitoring + alerting)
-├── Bookworm (teammate — knowledge curation → shared/knowledge/)
+├── Son of Anton (teammate — monitoring + alerting + Jarvis watchdog)
+├── Bookworm (teammate — Editor-in-Chief → The Compendium + shared/knowledge/)
 │
 ├── son-of-anton.sh (bash daemon, tmux: son-of-anton — cheap 60s polling)
 │
@@ -52,7 +52,8 @@ Jarvis5A (user's session — Agent Team: jarvis-command)
     ├── agent-pulse/*.json (heartbeats)
     ├── jarvis-inbox/ (bash monitor → Jarvis)
     ├── messages/ (cross-team broadcasts)
-    ├── knowledge/ (Bookworm's output)
+    ├── knowledge/ (Bookworm's output — The Compendium)
+    │   ├── compendium.ipynb (THE definitive reference document)
     │   ├── chronicle.md, techniques.md, constraints.md
     │   └── notebooks/ (Jupyter visual analysis)
     └── Research/findings/, Research/papers/
@@ -186,7 +187,7 @@ Team finds breakthrough
   → son-of-anton.sh (bash) detects on next 60s poll, writes jarvis-inbox/
   → Son of Anton (teammate) reads inbox, sends message to Jarvis
   → Jarvis reads message, broadcasts strategy to all teams
-  → Bookworm updates chronicle.md + techniques.md
+  → Bookworm updates The Compendium + chronicle.md + techniques.md
   → Other teams read messages on their next cycle
 ```
 
@@ -207,20 +208,21 @@ Teams use Greek alphabet: alpha, beta, gamma, delta, epsilon, zeta, eta, theta, 
 
 Teammates use Parent-Child: `Alpha-Experiment`, `Alpha-Research`, `Alpha-Adversary`.
 
-## Knowledge Base
+## Knowledge Base — The Compendium
 
-Bookworm — a teammate in Jarvis's command team — maintains `shared/knowledge/`:
+Bookworm — Jarvis's Editor-in-Chief — maintains `shared/knowledge/`. The centerpiece is **The Compendium** (`compendium.ipynb`), a comprehensive, publishable-quality reference document on the optimization problem.
 
 | Document | Purpose |
 |---|---|
+| `compendium.ipynb` | **The Compendium**: definitive reference with Abstract, Problem Statement, Literature Review, Methodology, Results, Technique Library, Dead Ends, Discussion, References |
 | `chronicle.md` | Running narrative of the optimization journey — each breakthrough, architecture change, and milestone |
 | `techniques.md` | Library of proven optimization techniques with evidence (experiment numbers, metric impact) |
 | `constraints.md` | Readable constraint map: hard (proven impossible), soft (may change), disproven (adversary broke) |
 | `notebooks/*.ipynb` | Jupyter notebooks for visual analysis — trace heatmaps, experiment trends, bottleneck breakdowns |
 
-Bookworm generates concept diagrams for spatial/temporal techniques (pipeline interleaving, cache blocking, loop tiling) using `scripts/generate-diagram.py` and Gemini 2.5 Flash image generation. Diagrams are embedded as inline base64 in notebook markdown cells. Requires `GEMINI_API_KEY` env var.
+Bookworm operates on a **self-driven pulse** (every 10 experiments) plus urgent triggers from Son of Anton. It tracks trends, maintains citations and cross-references, rates evidence quality ([strong]/[moderate]/[weak]), and ensures every claim traces back to an experiment number or paper.
 
-Style reference: see `analysis/classroom.ipynb` (progressive skill tree with analogies) and `analysis/trace_analysis.ipynb` (practical visualization with "what to look for" guides).
+Concept diagrams for spatial/temporal techniques use `scripts/generate-diagram.py` with Gemini 2.5 Flash image generation, embedded as inline base64 in notebook markdown cells. Requires `GEMINI_API_KEY` env var.
 
 ## Plateau Breaking
 
@@ -255,61 +257,54 @@ There are exactly three ways to create new agents. Each has one correct use.
 ## Architecture
 
 ```mermaid
-graph TB
-    subgraph "Layer 3: Fleet Orchestration"
-        J[Jarvis5A<br/>Fleet Orchestrator]
-        SoA[Son of Anton<br/>Monitoring]
-        BW[Bookworm<br/>Knowledge Curator]
-
-        J --- SoA
-        J --- BW
-
-        subgraph "Team Alpha (tmux + worktree)"
-            AL[Alpha Lead]
-            AE[Alpha-Experiment]
-            AR[Alpha-Research]
-            AA[Alpha-Adversary]
-            AL --- AE
-            AL --- AR
-            AL --- AA
-        end
-
-        subgraph "Team Beta (tmux + worktree)"
-            BL[Beta Lead]
-            BE[Beta-Experiment]
-            BR[Beta-Research]
-            BA[Beta-Adversary]
-            BL --- BE
-            BL --- BR
-            BL --- BA
-        end
-
-        J -->|launch + monitor| AL
-        J -->|launch + monitor| BL
-        SoA -->|pulse check| AL
-        SoA -->|pulse check| BL
-        BW -->|reads| shared
+graph LR
+    subgraph CMD["Jarvis Command Team"]
+        J["<b>Jarvis5A</b><br/>Fleet Orchestrator<br/>Self-pulse + Active Loop"]
+        SoA["<b>Son of Anton</b><br/>Fleet Monitor<br/>+ Jarvis Watchdog"]
+        BW["<b>Bookworm</b><br/>Editor-in-Chief<br/>The Compendium"]
     end
 
-    subgraph "Layer 2: Breakthrough Pipeline"
-        EX[Explorer<br/>System deep-read]
-        AD[Adversary<br/>Challenge constraints]
-        AC[Architect<br/>New approaches]
-        SC[Scout<br/>Isolated tests]
-        AN[Analyst<br/>Pattern analysis]
-        EX --> AC
-        AD --> AC
+    subgraph ALPHA["Team Alpha &nbsp;(tmux + worktree)"]
+        AL["Alpha Lead"]
+        AE["Experiment"]
+        AR["Research"]
+        AA["Adversary"]
     end
 
-    subgraph "Layer 1: Experiment Discipline"
-        shared[shared/<br/>experiments.tsv<br/>best-metric.txt<br/>learned-constraints.md]
-        scripts[Scripts<br/>track-experiment.sh<br/>show-progress.sh<br/>son-of-anton.sh]
+    subgraph BETA["Team Beta &nbsp;(tmux + worktree)"]
+        BL["Beta Lead"]
+        BE["Experiment"]
+        BR["Research"]
+        BA["Adversary"]
     end
 
-    AL -->|experiments| shared
-    BL -->|experiments| shared
-    AC -->|rewrite| shared
-    scripts -->|read/write| shared
+    subgraph BREAK["Breakthrough Pipeline"]
+        EX["Explorer"] --> AC["Architect"]
+        AD["Adversary"] --> AC
+    end
+
+    subgraph STATE["shared/ &nbsp;(symlinked across worktrees)"]
+        TSV["experiments.tsv"]
+        BEST["best-metric.txt"]
+        PULSE["agent-pulse/"]
+        KNOW["knowledge/<br/>compendium.ipynb"]
+    end
+
+    J -->|"launch<br/>+ monitor"| AL
+    J -->|"launch<br/>+ monitor"| BL
+    J --- SoA
+    J --- BW
+    AL --- AE
+    AL --- AR
+    AL --- AA
+    BL --- BE
+    BL --- BR
+    BL --- BA
+    SoA -->|"pulse check"| PULSE
+    BW -->|"writes"| KNOW
+    AL -->|"log results"| TSV
+    BL -->|"log results"| TSV
+    AC -->|"rewrite"| STATE
 ```
 
 ### Shared State
@@ -323,7 +318,7 @@ graph TB
 | `shared/agent-pulse/` | Per-agent heartbeat JSON files |
 | `shared/jarvis-inbox/` | Son of Anton bash daemon reports |
 | `shared/messages/` | Cross-team broadcasts (new-best, breakthrough-relay, stale-agent) |
-| `shared/knowledge/` | Bookworm's human-readable documents |
+| `shared/knowledge/` | Bookworm's output: The Compendium (compendium.ipynb), chronicle, techniques, constraints |
 | `shared/Research/findings/` | Agent research summaries (safe for context windows) |
 | `shared/Research/papers/` | Full paper texts (never read directly — context killer) |
 
@@ -332,8 +327,8 @@ graph TB
 | Role | Type | Purpose |
 |---|---|---|
 | Jarvis5A | Team lead (jarvis-command) | Fleet orchestrator — launch, status, expand, relay, teardown |
-| Son of Anton | Teammate (jarvis-command) | Monitoring + alerting, reads pulse files and inbox |
-| Bookworm | Teammate (jarvis-command) | Knowledge curation — chronicle, techniques, constraints, notebooks |
+| Son of Anton | Teammate (jarvis-command) | Monitoring + alerting + Jarvis watchdog, reads pulse files and inbox |
+| Bookworm | Teammate (jarvis-command) | Editor-in-Chief — The Compendium, self-driven pulse, citations, trend analysis |
 | Team Lead | Team lead (perf-lab-\*) | Creates internal Agent Team, coordinates teammates |
 | `-Experiment` | general-purpose | Implements and tests optimization changes |
 | `-Research` | general-purpose | Queries NotebookLM, reads papers, searches web |
