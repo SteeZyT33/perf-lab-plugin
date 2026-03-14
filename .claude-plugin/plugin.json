@@ -1,7 +1,11 @@
 {
   "name": "perf-lab",
-  "version": "0.1.0",
-  "description": "Autonomous multi-agent performance optimization plugin",
-  "skills": "skills",
-  "agents": "agents"
+  "version": "3.0.0",
+  "description": "Autonomous multi-agent performance optimization plugin for Claude Code. Turns any 'optimize metric X' problem into coordinated research teams with experiment tracking, breakthrough detection, and knowledge curation.",
+  "author": {
+    "name": "S. Taylor Labs"
+  },
+  "repository": "https://github.com/SteeZyT33/perf-lab-plugin",
+  "license": "MIT",
+  "keywords": ["performance", "optimization", "multi-agent", "experiments", "autoresearch"]
 }
