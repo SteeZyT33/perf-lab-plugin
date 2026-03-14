@@ -44,7 +44,7 @@ chmod +x "$TARGET/scripts/"*.sh
 echo "  Copied scripts → scripts/ (chmod +x)"
 
 # Shared directory
-mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-state"
+mkdir -p "$TARGET/shared/Research/papers" "$TARGET/shared/Research/findings" "$TARGET/shared/agent-state" "$TARGET/shared/agent-pulse" "$TARGET/shared/jarvis-inbox" "$TARGET/shared/knowledge/notebooks"
 if [[ ! -f "$TARGET/shared/experiments.tsv" ]]; then
     CONFIG="$TARGET/perf-lab.config.json"
     if [[ -f "$CONFIG" ]]; then
@@ -114,6 +114,5 @@ echo ""
 echo "Done! Next steps:"
 echo "  1. Edit perf-lab.config.json with your metric, test command, and targets"
 echo "  2. Edit prompts/*.md with agent-specific strategies"
-echo "  3. Run: ./scripts/setup-worktrees.sh"
-echo "  4. Run: ./scripts/launch-agent.sh <agent-name>"
-echo "  5. Or use: /perf-lab:experiment for single iterations"
+echo "  3. Run /perf-lab:jarvis to launch research teams (Jarvis5A orchestrator)"
+echo "  4. Or run /perf-lab:experiment for single iterations"

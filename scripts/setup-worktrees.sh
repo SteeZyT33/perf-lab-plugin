@@ -11,7 +11,15 @@ WORKTREES_DIR="$PROJECT_DIR/worktrees"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-readarray -t AGENTS < <(jq -r '.agents[]' "$CONFIG")
+GREEK_NAMES=(alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega)
+
+# Support both: explicit agents array OR team_count with Greek naming
+if jq -e '.agents' "$CONFIG" &>/dev/null; then
+    readarray -t AGENTS < <(jq -r '.agents[]' "$CONFIG")
+else
+    TEAM_COUNT=$(jq -r '.team_count // 3' "$CONFIG")
+    AGENTS=("${GREEK_NAMES[@]:0:$TEAM_COUNT}")
+fi
 
 echo -e "${BOLD}${CYAN}Setting up parallel agent worktrees...${NC}"
 echo ""
@@ -55,6 +63,11 @@ for AGENT in "${AGENTS[@]}"; do
         ln -s "$SHARED_DIR" "$WORKTREE_DIR/shared"
     else
         ln -s "$SHARED_DIR" "$WORKTREE_DIR/shared"
+    fi
+
+    if [[ ! -e "$WORKTREE_DIR/scripts" ]]; then
+        ln -s "$PROJECT_DIR/scripts" "$WORKTREE_DIR/scripts"
+        echo -e "  ${GREEN}Symlinked scripts/${NC}"
     fi
 
     [[ -f "$PROJECT_DIR/CLAUDE.md" ]] && cp "$PROJECT_DIR/CLAUDE.md" "$WORKTREE_DIR/CLAUDE.md" && echo -e "  ${GREEN}Copied CLAUDE.md${NC}"

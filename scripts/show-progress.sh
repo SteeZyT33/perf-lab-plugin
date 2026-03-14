@@ -104,6 +104,50 @@ while IFS=$'\t' read -r TARGET_VAL LABEL; do
 done
 
 echo "╠══════════════════════════════════════════════════════════════════╣"
+echo "║  Agent Health (pulse)                                           ║"
+echo "╠══════════════════════════════════════════════════════════════════╣"
+PULSE_DIR="$SHARED_DIR/agent-pulse"
+if [[ -d "$PULSE_DIR" ]] && ls "$PULSE_DIR"/*.json &>/dev/null; then
+    printf "║  %-22s %-4s %-8s %-10s %-8s %-3s ║\n" "AGENT" "ITER" "PHASE" "LAST SEEN" "KPT/TOT" "ST"
+    echo "║  ---------------------- ---- -------- ---------- -------- --- ║"
+    NOW=$(date +%s)
+    for PULSE in "$PULSE_DIR"/*.json; do
+        P_AGENT=$(jq -r '.agent // "?"' "$PULSE" 2>/dev/null)
+        P_ITER=$(jq -r '.iteration // "-"' "$PULSE" 2>/dev/null)
+        P_PHASE=$(jq -r '.phase // "?"' "$PULSE" 2>/dev/null)
+        P_TS=$(jq -r '.last_activity // ""' "$PULSE" 2>/dev/null)
+        P_KEPT=$(jq -r '.experiments_kept // 0' "$PULSE" 2>/dev/null)
+        P_TOTAL=$(jq -r '.experiments_total // 0' "$PULSE" 2>/dev/null)
+
+        if [[ -n "$P_TS" ]]; then
+            P_EPOCH=$(date -d "$P_TS" +%s 2>/dev/null || echo 0)
+            AGE=$(( NOW - P_EPOCH ))
+            if (( AGE < 60 )); then
+                AGO="${AGE}s ago"
+            elif (( AGE < 3600 )); then
+                AGO="$(( AGE / 60 ))m ago"
+            else
+                AGO="$(( AGE / 3600 ))h ago"
+            fi
+            if (( AGE > 600 )); then
+                STATUS="!!!"
+            elif (( AGE > 300 )); then
+                STATUS="..."
+            else
+                STATUS="ok"
+            fi
+        else
+            AGO="unknown"
+            STATUS="?"
+        fi
+
+        printf "║  %-22.22s %-4s %-8.8s %-10s %3s/%-4s %-3s ║\n" \
+            "$P_AGENT" "$P_ITER" "$P_PHASE" "$AGO" "$P_KEPT" "$P_TOTAL" "$STATUS"
+    done
+else
+    echo "║  (no pulse files — agents not yet reporting)                    ║"
+fi
+echo "╠══════════════════════════════════════════════════════════════════╣"
 echo "║  LAST 15 EXPERIMENTS                                            ║"
 echo "╠══════════════════════════════════════════════════════════════════╣"
 printf "║  %-8s %-4s %-8s %-8s %-8s %-26.26s ║\n" "AGENT" "ITER" "STATUS" "BEFORE" "AFTER" "HYPOTHESIS"

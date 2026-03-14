@@ -20,9 +20,11 @@ PROMPT_SRC="$PROJECT_DIR/prompts/${AGENT}.md"
 TEMPLATE_SRC="$PROJECT_DIR/prompts/agent-template.md"
 PROMPT_DST="$WORKTREE_DIR/${AGENT}-prompt.md"
 
-# Validate agent is in config
-if ! jq -e --arg a "$AGENT" '.agents | index($a)' "$CONFIG" &>/dev/null; then
-    echo -e "${YELLOW}Warning: '$AGENT' not in config agents list${NC}"
+# Validate agent is in config (supports both agents array and team_count)
+if jq -e '.agents' "$CONFIG" &>/dev/null; then
+    if ! jq -e --arg a "$AGENT" '.agents | index($a)' "$CONFIG" &>/dev/null; then
+        echo -e "${YELLOW}Warning: '$AGENT' not in config agents list${NC}"
+    fi
 fi
 
 if [[ ! -d "$WORKTREE_DIR" ]]; then

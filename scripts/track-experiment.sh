@@ -13,6 +13,7 @@ TEST_CMD=$(jq -r '.test_command' "$CONFIG")
 PARSE_CMD=$(jq -r '.parse_metric' "$CONFIG")
 DIRECTION=$(jq -r '.direction // "lower"' "$CONFIG")
 SOLUTION_FILE=$(jq -r '.solution_file' "$CONFIG")
+VERIFICATION_RUNS=$(jq -r '.verification_runs // 1' "$CONFIG")
 
 SHARED_DIR="$PROJECT_DIR/shared"
 TSV="$SHARED_DIR/experiments.tsv"
@@ -54,13 +55,54 @@ if [[ "$STATUS" == "FAILED" ]]; then
     METRIC_AFTER="-"
     [[ -z "$NOTES" ]] && NOTES="correctness check failed"
 else
-    echo "Running tests to capture ${METRIC_NAME}..."
-    TEST_OUTPUT=$(cd "$PROJECT_DIR" && eval "$TEST_CMD" 2>&1) || true
-    METRIC_AFTER=$(echo "$TEST_OUTPUT" | eval "$PARSE_CMD" | head -1)
-    if [[ -z "$METRIC_AFTER" ]]; then
-        echo "Warning: Could not parse ${METRIC_NAME} from test output."
-        echo "$TEST_OUTPUT" | tail -20
-        METRIC_AFTER="-"
+    # For KEPT experiments with verification_runs > 1, run multiple times and take worst
+    RUNS_NEEDED=1
+    if [[ "$STATUS" == "KEPT" && "$VERIFICATION_RUNS" -gt 1 ]]; then
+        RUNS_NEEDED="$VERIFICATION_RUNS"
+        echo "Running ${RUNS_NEEDED} verification runs (reporting worst)..."
+    else
+        echo "Running tests to capture ${METRIC_NAME}..."
+    fi
+
+    METRIC_AFTER="-"
+    ALL_RESULTS=""
+    for (( RUN=1; RUN<=RUNS_NEEDED; RUN++ )); do
+        TEST_OUTPUT=$(cd "$PROJECT_DIR" && eval "$TEST_CMD" 2>&1) || true
+        RUN_METRIC=$(echo "$TEST_OUTPUT" | eval "$PARSE_CMD" | head -1)
+        if [[ -z "$RUN_METRIC" ]]; then
+            echo "Warning: Could not parse ${METRIC_NAME} from test output (run $RUN)."
+            echo "$TEST_OUTPUT" | tail -20
+            continue
+        fi
+
+        if (( RUNS_NEEDED > 1 )); then
+            echo "  Run ${RUN}/${RUNS_NEEDED}: ${RUN_METRIC} ${METRIC_NAME}"
+        fi
+
+        ALL_RESULTS="${ALL_RESULTS}${ALL_RESULTS:+ }${RUN_METRIC}"
+
+        # Take worst result: for "lower is better" → take the highest (worst)
+        #                     for "higher is better" → take the lowest (worst)
+        if [[ "$METRIC_AFTER" == "-" ]]; then
+            METRIC_AFTER="$RUN_METRIC"
+        elif [[ "$DIRECTION" == "lower" ]]; then
+            # Worst = highest value when lower is better
+            if awk "BEGIN{exit(!($RUN_METRIC>$METRIC_AFTER))}"; then
+                METRIC_AFTER="$RUN_METRIC"
+            fi
+        else
+            # Worst = lowest value when higher is better
+            if awk "BEGIN{exit(!($RUN_METRIC<$METRIC_AFTER))}"; then
+                METRIC_AFTER="$RUN_METRIC"
+            fi
+        fi
+    done
+
+    if [[ "$METRIC_AFTER" == "-" ]]; then
+        echo "Warning: Could not parse ${METRIC_NAME} from any test run."
+    elif (( RUNS_NEEDED > 1 )); then
+        echo "${METRIC_NAME} (worst of ${RUNS_NEEDED}): $METRIC_AFTER [all: ${ALL_RESULTS}]"
+        NOTES="${NOTES:+${NOTES}; }verified ${RUNS_NEEDED}x [${ALL_RESULTS}] worst=${METRIC_AFTER}"
     else
         echo "${METRIC_NAME}: $METRIC_AFTER"
     fi
@@ -93,6 +135,29 @@ fi
 # Read back the iteration number we just wrote
 ITER=$(tail -n 1 "$TSV" | cut -f3)
 echo "Logged experiment #${ITER} by ${AGENT}: ${STATUS} — ${HYPOTHESIS} (${DURATION}s)"
+
+# Update agent pulse file for heartbeat monitoring
+PULSE_DIR="$SHARED_DIR/agent-pulse"
+mkdir -p "$PULSE_DIR"
+PULSE_FILE="$PULSE_DIR/${AGENT}.json"
+
+KEPT_COUNT=$(awk -F'\t' -v a="$AGENT" '$2==a && $7=="KEPT"' "$TSV" | wc -l)
+TOTAL_COUNT=$(awk -F'\t' -v a="$AGENT" '$2==a' "$TSV" | wc -l)
+AGENT_ITER=$(awk -F'\t' -v a="$AGENT" '$2==a {n++} END{print n+0}' "$TSV")
+BEST_VAL=$(cat "$SHARED_DIR/best-metric.txt" 2>/dev/null | tr -d '[:space:]')
+[[ -z "$BEST_VAL" || ! "$BEST_VAL" =~ ^[0-9.eE+-]+$ ]] && BEST_VAL=-1
+
+jq -n \
+  --arg agent "$AGENT" \
+  --argjson iter "$AGENT_ITER" \
+  --arg phase "idle" \
+  --arg last "$(date -Iseconds)" \
+  --arg hyp "$HYPOTHESIS" \
+  --argjson best "$BEST_VAL" \
+  --argjson kept "$KEPT_COUNT" \
+  --argjson total "$TOTAL_COUNT" \
+  '{agent: $agent, iteration: $iter, phase: $phase, last_activity: $last, current_hypothesis: $hyp, best_metric: $best, experiments_kept: $kept, experiments_total: $total}' \
+  > "$PULSE_FILE"
 
 # Bootstrap: first KEPT experiment establishes the baseline best
 if [[ "$STATUS" == "KEPT" && "$METRIC_AFTER" != "-" ]]; then
